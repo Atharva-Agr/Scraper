@@ -1,0 +1,69 @@
+[
+    {
+        "hotel_name": "Pride Plaza Hotel, Aerocity, New Delhi",
+        "location": "5-A, Hospitality District, Aerocity, Delhi 110037",
+        "area": "Aerocity, Delhi",
+        "chain_or_independent": null,
+        "hotel_type": null,
+        "website": "https://www.pridehotel.com/pride-plaza-hotel-aerocity-new-delhi-hotel/",
+        "phone": "+91 11 7160 0700 | +91 11 6610 3536",
+        "email": "reservations.aerocity@pridehotel.com",
+        "rating": null,
+        "review_summary": null,
+        "room_types": [
+            "Deluxe",
+            "Superior",
+            "Premium",
+            "Suite"
+        ],
+        "room_pricing": [],
+        "facilities": [
+            "Zivaya Spa",
+            "Airport Pick-up & Drop Service (chargeable)",
+            "Multi-cuisine Restaurant",
+            "Spa",
+            "Swimming Pool",
+            "Fitness Centre, Bar",
+            "Free Wi-Fi",
+            "Fitness Centre",
+            "Great Location",
+            "Close to Airport",
+            "Travel Desk"
+        ],
+        "source_url": "https://www.pridehotel.com/pride-plaza-hotel-aerocity-new-delhi-hotel/"
+    },
+    {
+        "hotel_name": "Hotel Delhi Aerocity",
+        "location": null,
+        "area": "Aerocity, Delhi",
+        "chain_or_independent": null,
+        "hotel_type": "Budget Transit Hotel",
+        "website": "https://www.hoteldelhiaerocity.com/",
+        "phone": "+919910998498",
+        "email": "hoteldelhiaerocity@gmail.com",
+        "rating": null,
+        "review_summary": null,
+        "room_types": [
+            "Deluxe Room",
+            "Super Deluxe Room"
+        ],
+        "room_pricing": [
+            "Rooms starting from 1495/-*"
+        ],
+        "facilities": [
+            "Free Wi-Fi",
+            "Room Service",
+            "Breakfast",
+            "Restaurant & Cafe",
+            "Air Conditioner",
+            "Shuttle Service (Surcharge)",
+            "City Tour",
+            "Credit Card Accepted",
+            "Travel desk",
+            "Doctor on Call",
+            "Elevator",
+            "24*7 Reception"
+        ],
+        "source_url": "https://www.hoteldelhiaerocity.com/"
+    }
+]
