@@ -1,69 +1,1277 @@
 [
     {
-        "hotel_name": "Pride Plaza Hotel, Aerocity, New Delhi",
-        "location": "5-A, Hospitality District, Aerocity, Delhi 110037",
-        "area": "Aerocity, Delhi",
+        "hotel_name": "Orchard Hotel Singapore",
+        "location": "Orchard, Singapore",
+        "area": "Orchard",
         "chain_or_independent": null,
         "hotel_type": null,
-        "website": "https://www.pridehotel.com/pride-plaza-hotel-aerocity-new-delhi-hotel/",
-        "phone": "+91 11 7160 0700 | +91 11 6610 3536",
-        "email": "reservations.aerocity@pridehotel.com",
-        "rating": null,
-        "review_summary": null,
+        "website": "https://orchardhotelsingapore.singapore-sg.com/en/",
+        "phone": null,
+        "email": null,
+        "rating": 7.5,
+        "review_summary": "The hotel is well-located with good amenities and services, but some guests found the breakfast service slow and the rooms a bit dated.",
         "room_types": [
-            "Deluxe",
-            "Superior",
-            "Premium",
-            "Suite"
-        ],
-        "room_pricing": [],
-        "facilities": [
-            "Zivaya Spa",
-            "Airport Pick-up & Drop Service (chargeable)",
-            "Multi-cuisine Restaurant",
-            "Spa",
-            "Swimming Pool",
-            "Fitness Centre, Bar",
-            "Free Wi-Fi",
-            "Fitness Centre",
-            "Great Location",
-            "Close to Airport",
-            "Travel Desk"
-        ],
-        "source_url": "https://www.pridehotel.com/pride-plaza-hotel-aerocity-new-delhi-hotel/"
-    },
-    {
-        "hotel_name": "Hotel Delhi Aerocity",
-        "location": null,
-        "area": "Aerocity, Delhi",
-        "chain_or_independent": null,
-        "hotel_type": "Budget Transit Hotel",
-        "website": "https://www.hoteldelhiaerocity.com/",
-        "phone": "+919910998498",
-        "email": "hoteldelhiaerocity@gmail.com",
-        "rating": null,
-        "review_summary": null,
-        "room_types": [
-            "Deluxe Room",
-            "Super Deluxe Room"
+            "Signature Suite"
         ],
         "room_pricing": [
-            "Rooms starting from 1495/-*"
+            "180 usd for the next dates"
         ],
         "facilities": [
-            "Free Wi-Fi",
-            "Room Service",
-            "Breakfast",
-            "Restaurant & Cafe",
-            "Air Conditioner",
-            "Shuttle Service (Surcharge)",
-            "City Tour",
-            "Credit Card Accepted",
-            "Travel desk",
-            "Doctor on Call",
-            "Elevator",
-            "24*7 Reception"
+            "Tea/Coffee maker",
+            "Shower",
+            "Upper floors accessible by elevator",
+            "Cable channels",
+            "Bathtub",
+            "Bathtub or shower",
+            "Safe",
+            "Carpeted",
+            "TV",
+            "Telephone",
+            "Air conditioning",
+            "Flat-screen TV",
+            "Hairdryer",
+            "Wake-up service/Alarm clock",
+            "Toilet paper",
+            "Iron",
+            "Soundproof",
+            "Tile/Marble floor",
+            "Bathrobe",
+            "Wake-up service",
+            "Radio",
+            "Electric kettle",
+            "Desk",
+            "Ironing facilities",
+            "Free toiletries",
+            "Towels/Sheets (extra fee)",
+            "Toilet",
+            "Wardrobe or closet",
+            "Private Bathroom",
+            "Slippers",
+            "Satellite channels",
+            "Socket near the bed"
         ],
-        "source_url": "https://www.hoteldelhiaerocity.com/"
+        "source_url": "https://orchardhotelsingapore.singapore-sg.com/en/",
+        "manager_contacts": [
+            {
+                "name": "Jacqueline Ho",
+                "role": "General Manager",
+                "email": null,
+                "linkedin_url": "https://sg.linkedin.com/in/jacqueline-ho-77176020a",
+                "profile_url": "https://sg.linkedin.com/in/jacqueline-ho-77176020a",
+                "source_url": "https://sg.linkedin.com/in/jacqueline-ho-77176020a",
+                "confidence": "high",
+                "evidence_type": "linkedin_person_profile",
+                "evidence_reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 1 role matched in title: general manager",
+                    "Evidence type: linkedin_person_profile",
+                    "Current/recent signal found"
+                ]
+            },
+            {
+                "name": "Andrew Tan",
+                "role": "General Manager",
+                "email": null,
+                "linkedin_url": null,
+                "profile_url": "https://sbr.com.sg/hotels-tourism/people/orchard-hotel-singapore-appoints-andrew-tan-general-manager",
+                "source_url": "https://sbr.com.sg/hotels-tourism/people/orchard-hotel-singapore-appoints-andrew-tan-general-manager",
+                "confidence": "high",
+                "evidence_type": "news_or_interview",
+                "evidence_reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 1 role matched in title: general manager",
+                    "Evidence type: news_or_interview"
+                ]
+            }
+        ],
+        "contact_leads": [
+            {
+                "url": "https://sg.linkedin.com/in/justina-tan-3b6945a4",
+                "title": "Justina Tan - Senior reservations sales executive at Orchard ...Ryan Tan - -- | LinkedInYM Zai Yaakop - Assistant Director Of Food And Beverage at ...Amy Ang - Director of Marketing Communications, Orchard Hotel ...",
+                "body": "Senior reservations sales executive at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Education: Singapore University of Social Sciences (SUSS) · Location: Singapore ·... · Experience: Orchard Hotel Singapore · Education: Southern Cross University · Location: Singapore · 166 connections on LinkedIn. View Ryan Tan’s profile on LinkedIn, a professional... Assistant Director Of Food And Beverage at Orchard Hotel Singapore · Experience: looking for new opportunities · Location: Singapore · 500+ connections on LinkedIn. View YM Zai Yaakop’s... Director of Marketing Communications, Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore · 500+ connections on LinkedIn. View Amy Ang’s profile on...",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Justina Tan - Senior reservations sales executive at Orchard ...Ryan Tan - --",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/en/?currency=JMD",
+                "title": "Orchard Hotel Singapore, Singapore - Website",
+                "body": "To book a room with more than 1 child under two years of age it is required that you contact us directly. Call or write to us so that we can personally attend to your request.",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Orchard Hotel Singapore, Singapore - Website",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/in/contact?currency=THB",
+                "title": "Telephone & Contact Orchard Hotel Singapore, Singapore - Website",
+                "body": "To book a room with more than 1 child under two years of age it is required that you contact us directly. Call or write to us so that we can personally attend to your request.",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Telephone & Contact Orchard Hotel Singapore, Singapore - Website",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/zh/contact?tpl=default",
+                "title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "body": "442 Orchard Road, Orchard, 238879 Singapore, Singapore Located along Singapore’s busiest shopping street, this hotel is a 10-minute walk from Orchard MRT station. It offers a fitness center, 4 dining options and free parking. Free WiFi is provided in rooms and throughout the property. Orchard Hotel Singapore features modern furnishings and either European-style prints or Chinese accents ...",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/tw/contact?tpl=default",
+                "title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "body": "Located along Singapore’s busiest shopping street, this hotel is a 10-minute walk from Orchard MRT station. It offers a fitness center, 4 dining options and free parking. Free WiFi is provided in rooms and throughout the property. Orchard Hotel Singapore features modern furnishings and either European-style prints or Chinese accents. Premium amenities include a 32-inch flat-screen TV with ...",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://rocketreach.co/grace-yong-email_139061466",
+                "title": "Grace Yong Email & Phone Number | Orchard Hotel Singapore...",
+                "body": "Grace Yong Email. Human Resources Manager @ Orchard Hotel Singapore. Preparing profile…Grace Yong holds a 2006 - 2009 Bachelor's degree in Business Administration and Management, General @ National University of Malaysia (UKM).",
+                "query": "\"Orchard Hotel Singapore\" \"general manager\" email",
+                "score": 40,
+                "evidence_type": "lead_database",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": "human resources",
+                "title_role": null,
+                "body_role": "human resources",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 3 role matched in body/snippet: human resources",
+                    "Evidence type: lead_database",
+                    "Lead database capped as weak/medium lead"
+                ],
+                "primary_title": "Grace Yong Email & Phone Number | Orchard Hotel Singapore...",
+                "primary_title_hotel_match": true
+            }
+        ],
+        "contact_debug_candidates": [
+            {
+                "url": "https://sg.linkedin.com/in/jacqueline-ho-77176020a",
+                "title": "Jacqueline Ho - General Manager at Orchard Hotel | LinkedInMichael Janssen - General Manager at Hilton Singapore Orchard ...Thomas Hoeborn - Conrad Singapore Orchard | LinkedInJustina Tan - Senior reservations sales executive at Orchard ...Ryan Tan - -- | LinkedInYM Zai Yaakop - Assistant Director Of Food And Beverage at ...Amy Ang - Director of Marketing Communications, Orchard Hotel ...",
+                "body": "General Manager at Orchard Hotel · 20+ years in Hospitality Industry. A highly driven individual with a consistently good track record of achieving goals. Able to contribute substantially... General Manager of Hilton Singapore Orchard, Hilton’s largest hotel in Asia Pacific with 1,080 rooms and suites. Accountable for overall strategy, commercial performance, guest experience... Experience General Manager Conrad Singapore Orchard Mar 2025 - Present 1 year 5 months Singapore, Singapore Senior reservations sales executive at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Education: Singapore University of Social Sciences (SUSS) · Location: Singapore ·... · Experience: Orchard Hotel Singapore · Education: Southern Cross University · Location: Singapore · 166 connections on LinkedIn. View Ryan Tan’s profile on LinkedIn, a professional... Assistant Director Of Food And Beverage at Orchard Hotel Singapore · Experience: looking for new opportunities · Location: Singapore · 500+ connections on LinkedIn. View YM Zai Yaakop’s... Director of Marketing Communications, Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore · 500+ connections on LinkedIn. View Amy Ang’s profile on...",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"general manager\"",
+                "score": 125,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "general manager",
+                "title_role": "general manager",
+                "body_role": "general manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 1 role matched in title: general manager",
+                    "Evidence type: linkedin_person_profile",
+                    "Current/recent signal found"
+                ],
+                "primary_title": "Jacqueline Ho - General Manager at Orchard Hotel",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://sg.linkedin.com/in/yong-zhen-lee-129b0bb9",
+                "title": "YONG ZHEN LEE - Banquet Manager @ Orchard Hotel Singapore ...Melanie Lim (iHRP-SP, MScHR) - Director of Human Resources ...sharifah syahid - Sales Manager at Orchard Hotel Singapore ...Angie Khor - Catering Sales Manager at Orchard Hotel ...YM Zai Yaakop - Assistant Director Of Food And Beverage at ...Rhynn Loh - Human Resources Manager at Orchard Hotel ...",
+                "body": "With over 10 years of experience in Banquet operations, currently serving as Banquet Manager at Orchard Hotel Singapore, contributing to seamless event execution and team leadership. Director of Human Resources, Orchard Hotel Singapore · An experienced HR Professional with a demonstrated career history of 20 years experience working in Hospitality, Real Estate,... Sales Manager at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore. View sharifah syahid’s profile on LinkedIn, a professional community of 1... Catering Sales Manager at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore · 84 connections on LinkedIn. View Angie Khor’s profile on LinkedIn, a... Assistant Director Of Food And Beverage at Orchard Hotel Singapore · Experience: looking for new opportunities · Location: Singapore · 500+ connections on LinkedIn. View YM Zai Yaakop’s... Human Resources Manager at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Education: Ngee Ann Polytechnic · Location: Singapore · 9 connections on LinkedIn. View...",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"Orchard\" \"general manager\"",
+                "score": 107,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "sales manager",
+                "title_role": "sales manager",
+                "body_role": "sales manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 3 role matched in title: sales manager",
+                    "Evidence type: linkedin_person_profile",
+                    "Current/recent signal found"
+                ],
+                "primary_title": "YONG ZHEN LEE - Banquet Manager @ Orchard Hotel Singapore ...Melanie Lim (iHRP-SP, MScHR) - Director of Human Resources ...sharifah syahid - Sales Manager at Orchard Hotel Singapore ...Angie Khor - Catering Sales Manager at Orchard Hotel ...YM Zai Yaakop - Assistant Director Of Food And Beverage at ...Rhynn Loh - Human Resources Manager at Orchard Hotel ...",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://luxesocietyasia.com/travel/orchard-hotel-singapore-welcomes-newly-appointed-general-manager-jean-philippe-jacopin/",
+                "title": "Orchard Hotel Singapore welcomes newly appointed General Manager Jean ...",
+                "body": "Millennium Hotels and Resorts is pleased to announce the appointment of Jean-Philippe Jacopin as General Manager of Orchard Hotel Singapore, the group's flagship property located in the heart of the world-famous Orchard Road. A veteran of the hospitality industry, Jean-Philippe will spearhead the development of the 656-room property, following a multimillion-dollar transformation which ...",
+                "query": "\"Orchard Hotel Singapore\" \"Orchard\" \"general manager\" LinkedIn",
+                "score": 100,
+                "evidence_type": "news_or_interview",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "general manager",
+                "title_role": "general manager",
+                "body_role": "general manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 1 role matched in title: general manager",
+                    "Evidence type: news_or_interview"
+                ],
+                "primary_title": "Orchard Hotel Singapore welcomes newly appointed General Manager Jean ...",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://sbr.com.sg/hotels-tourism/people/orchard-hotel-singapore-appoints-andrew-tan-general-manager",
+                "title": "Orchard Hotel Singapore appoints Andrew Tan as general manager",
+                "body": "Most recently, Mr Tan was the General Manager of Millennium Gloucester and Millennium Bailey’s Hotel in London. In a release, Millennium and Copthorne International Limited announced Mr Andrew Tan’s appointment as General Manager of Orchard Hotel Singapore.",
+                "query": "\"Orchard Hotel Singapore\" \"Orchard\" \"general manager\" LinkedIn",
+                "score": 100,
+                "evidence_type": "news_or_interview",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "general manager",
+                "title_role": "general manager",
+                "body_role": "general manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 1 role matched in title: general manager",
+                    "Evidence type: news_or_interview"
+                ],
+                "primary_title": "Orchard Hotel Singapore appoints Andrew Tan as general manager",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://www.hospitalitynet.org/appointment/79008728.html",
+                "title": "Richard Ong named General Manager at the Orchard Hotel Singapore",
+                "body": "Richard Ong Richard Ong has been appointed general manager of the Orchard Hotel Singapore. A seasoned hotelier, Ong joins the Millennium and Copthorne property with 30 years’ experience in Singapore, the US, Cambodia, Australia, China and Japan.",
+                "query": "\"Orchard Hotel Singapore\" \"general manager\" joined appointed promoted",
+                "score": 100,
+                "evidence_type": "news_or_interview",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "general manager",
+                "title_role": "general manager",
+                "body_role": "general manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 1 role matched in title: general manager",
+                    "Evidence type: news_or_interview"
+                ],
+                "primary_title": "Richard Ong named General Manager at the Orchard Hotel Singapore",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://sg.linkedin.com/in/melanie-lim-ihrp-sp-mschr-4265b6b5",
+                "title": "Melanie Lim (iHRP-SP, MScHR) - Director of Human Resources ...sharifah syahid - Sales Manager at Orchard Hotel Singapore ...Angie Khor - Catering Sales Manager at Orchard Hotel ...YM Zai Yaakop - Assistant Director Of Food And Beverage at ...Rhynn Loh - Human Resources Manager at Orchard Hotel ...",
+                "body": "Director of Human Resources, Orchard Hotel Singapore · An experienced HR Professional with a demonstrated career history of 20 years experience working in Hospitality, Real Estate,... Sales Manager at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore. View sharifah syahid’s profile on LinkedIn, a professional community of 1... Catering Sales Manager at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore · 84 connections on LinkedIn. View Angie Khor’s profile on LinkedIn, a... Assistant Director Of Food And Beverage at Orchard Hotel Singapore · Experience: looking for new opportunities · Location: Singapore · 500+ connections on LinkedIn. View YM Zai Yaakop’s... Human Resources Manager at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Education: Ngee Ann Polytechnic · Location: Singapore · 9 connections on LinkedIn. View...",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"Orchard\" \"general manager\"",
+                "score": 92,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "sales manager",
+                "title_role": "sales manager",
+                "body_role": "sales manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 3 role matched in title: sales manager",
+                    "Evidence type: linkedin_person_profile"
+                ],
+                "primary_title": "Melanie Lim (iHRP-SP, MScHR) - Director of Human Resources ...sharifah syahid - Sales Manager at Orchard Hotel Singapore ...Angie Khor - Catering Sales Manager at Orchard Hotel ...YM Zai Yaakop - Assistant Director Of Food And Beverage at ...Rhynn Loh - Human Resources Manager at Orchard Hotel ...",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://sg.linkedin.com/in/sharifah-syahid-44646213a",
+                "title": "sharifah syahid - Sales Manager at Orchard Hotel Singapore ...",
+                "body": "Sales Manager at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore. View sharifah syahid’s profile on LinkedIn, a professional community of 1...",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"Orchard\" \"general manager\"",
+                "score": 92,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "sales manager",
+                "title_role": "sales manager",
+                "body_role": "sales manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 3 role matched in title: sales manager",
+                    "Evidence type: linkedin_person_profile"
+                ],
+                "primary_title": "sharifah syahid - Sales Manager at Orchard Hotel Singapore ...",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://www.malaysianfoodie.com/2017/10/tina-sim-appointed-general-manager-orchard-hotel-singapore.html",
+                "title": "Tina Sim Appointed General Manager of Orchard Hotel Singapore",
+                "body": "Millennium Hotels and Resorts announces the appointment of Tina Sim as General Manager of Orchard Hotel Singapore. Tina will lead and drive strategic.",
+                "query": "\"Orchard Hotel Singapore\" \"general manager\" joined appointed promoted",
+                "score": 75,
+                "evidence_type": "news_or_interview",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "general manager",
+                "title_role": "general manager",
+                "body_role": "general manager",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 1 role matched in title: general manager",
+                    "Evidence type: news_or_interview",
+                    "Historical/old signal found"
+                ],
+                "primary_title": "Tina Sim Appointed General Manager of Orchard Hotel Singapore",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://sg.linkedin.com/in/justina-tan-3b6945a4",
+                "title": "Justina Tan - Senior reservations sales executive at Orchard ...Ryan Tan - -- | LinkedInYM Zai Yaakop - Assistant Director Of Food And Beverage at ...Amy Ang - Director of Marketing Communications, Orchard Hotel ...",
+                "body": "Senior reservations sales executive at Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Education: Singapore University of Social Sciences (SUSS) · Location: Singapore ·... · Experience: Orchard Hotel Singapore · Education: Southern Cross University · Location: Singapore · 166 connections on LinkedIn. View Ryan Tan’s profile on LinkedIn, a professional... Assistant Director Of Food And Beverage at Orchard Hotel Singapore · Experience: looking for new opportunities · Location: Singapore · 500+ connections on LinkedIn. View YM Zai Yaakop’s... Director of Marketing Communications, Orchard Hotel Singapore · Experience: Orchard Hotel Singapore · Location: Singapore · 500+ connections on LinkedIn. View Amy Ang’s profile on...",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Justina Tan - Senior reservations sales executive at Orchard ...Ryan Tan - --",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/en/?currency=JMD",
+                "title": "Orchard Hotel Singapore, Singapore - Website",
+                "body": "To book a room with more than 1 child under two years of age it is required that you contact us directly. Call or write to us so that we can personally attend to your request.",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Orchard Hotel Singapore, Singapore - Website",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/in/contact?currency=THB",
+                "title": "Telephone & Contact Orchard Hotel Singapore, Singapore - Website",
+                "body": "To book a room with more than 1 child under two years of age it is required that you contact us directly. Call or write to us so that we can personally attend to your request.",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Telephone & Contact Orchard Hotel Singapore, Singapore - Website",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/zh/contact?tpl=default",
+                "title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "body": "442 Orchard Road, Orchard, 238879 Singapore, Singapore Located along Singapore’s busiest shopping street, this hotel is a 10-minute walk from Orchard MRT station. It offers a fitness center, 4 dining options and free parking. Free WiFi is provided in rooms and throughout the property. Orchard Hotel Singapore features modern furnishings and either European-style prints or Chinese accents ...",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://orchardhotelsingapore.singapore-sg.com/tw/contact?tpl=default",
+                "title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "body": "Located along Singapore’s busiest shopping street, this hotel is a 10-minute walk from Orchard MRT station. It offers a fitness center, 4 dining options and free parking. Free WiFi is provided in rooms and throughout the property. Orchard Hotel Singapore features modern furnishings and either European-style prints or Chinese accents. Premium amenities include a 32-inch flat-screen TV with ...",
+                "query": "site:orchardhotelsingapore.singapore-sg.com management team contact",
+                "score": 45,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Telephone & Contact Orchard Hotel Singapore Singapore",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://rocketreach.co/grace-yong-email_139061466",
+                "title": "Grace Yong Email & Phone Number | Orchard Hotel Singapore...",
+                "body": "Grace Yong Email. Human Resources Manager @ Orchard Hotel Singapore. Preparing profile…Grace Yong holds a 2006 - 2009 Bachelor's degree in Business Administration and Management, General @ National University of Malaysia (UKM).",
+                "query": "\"Orchard Hotel Singapore\" \"general manager\" email",
+                "score": 40,
+                "evidence_type": "lead_database",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": "human resources",
+                "title_role": null,
+                "body_role": "human resources",
+                "reasons": [
+                    "Hotel alias matched: orchard hotel singapore",
+                    "Location matched: ['orchard', 'singapore']",
+                    "Tier 3 role matched in body/snippet: human resources",
+                    "Evidence type: lead_database",
+                    "Lead database capped as weak/medium lead"
+                ],
+                "primary_title": "Grace Yong Email & Phone Number | Orchard Hotel Singapore...",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://sg.linkedin.com/in/michaeljanssen",
+                "title": "Michael Janssen - General Manager at Hilton Singapore Orchard ...",
+                "body": "General Manager of Hilton Singapore Orchard, Hilton’s largest hotel in Asia Pacific with 1,080 rooms and suites. Accountable for overall strategy, commercial performance, guest experience...",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"general manager\"",
+                "score": 0,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "No hotel/property match"
+                ]
+            },
+            {
+                "url": "https://sg.linkedin.com/in/thomas-hoeborn-2931933",
+                "title": "Thomas Hoeborn - Conrad Singapore Orchard | LinkedIn",
+                "body": "Experience General Manager Conrad Singapore Orchard Mar 2025 - Present 1 year 5 months Singapore, Singapore",
+                "query": "site:linkedin.com/in \"Orchard Hotel Singapore\" \"general manager\"",
+                "score": 0,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "No hotel/property match"
+                ]
+            },
+            {
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g294265-d305520-r935759650-Orchard_Hotel_Singapore-Singapore.html",
+                "title": "Comfortable and safe hotel in heart of Orchard Road... - Tripadvisor",
+                "body": "Jacqueline Ho, General Manager at Orchard Hotel Singapore, responded to this reviewResponded January 30, 2024. Dear GoPlaces27344421686, Your excellent rating for The Orchard Hotel Singapore is much appreciated. We hope you had a delightful stay.",
+                "query": "\"Orchard Hotel Singapore\" \"Orchard\" \"general manager\" LinkedIn",
+                "score": 0,
+                "evidence_type": "unknown",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Bad contact source/ad/directory"
+                ]
+            }
+        ]
+    },
+    {
+        "hotel_name": "Orchard Rendezvous Hotel",
+        "location": "Singapore",
+        "check_in_policy": {
+            "check_in_time": "2:00 PM onwards",
+            "check_out_time": "12:00 PM"
+        },
+        "amenities_and_services": [
+            {
+                "name": "Laundry Services",
+                "description": "Dry cleaning and laundry services are available. Charges may apply."
+            },
+            {
+                "name": "On-site Parking",
+                "description": "Complimentary on-site parking is provided for in-house guests."
+            },
+            {
+                "name": "Smoking Policy",
+                "description": "Smoking is strictly prohibited within the hotel premises. Smoking is only allowed in designated smoking areas (DSAs) in Orchard Road, which can be found at [www.nea.gov.sg/ORNSZ](https://www.nea.gov.sg/ORNSZ). Guests caught smoking in guestrooms will face a SGD 200 fine."
+            },
+            {
+                "name": "Luggage Storage",
+                "description": "Complimentary luggage storage is available for guests arriving before their check-in time or after checkout until the end of the day."
+            },
+            {
+                "name": "Power Socket",
+                "description": "Universal power sockets are provided in rooms."
+            },
+            {
+                "name": "Breakfast Timing",
+                "description": "Breakfast is served daily from 7:00 AM - 10:30 AM (Last order at 10:00 AM)."
+            },
+            {
+                "name": "Baby Cots",
+                "description": "Available on request and subject to availability."
+            },
+            {
+                "name": "Vegetarian Meals",
+                "description": "Vegetarian meals are available upon request. The hotel is not Halal-certified."
+            }
+        ],
+        "additional_services": [
+            {
+                "name": "Room Decoration for Celebrations",
+                "description": "Simple room decoration can be arranged at a nominal cost."
+            },
+            {
+                "name": "Airport Transfers",
+                "description": "Limousine services are available at a charge. Please inform the Front Office team of your flight details."
+            },
+            {
+                "name": "Wheelchair Loan Service",
+                "description": "Available on a loan basis within the hotel premises, subject to availability. Prior arrangements required."
+            }
+        ],
+        "room_types": [
+            {
+                "type": "Standard Room",
+                "availability": "Subject to availability"
+            },
+            {
+                "type": "Deluxe Room",
+                "availability": "Subject to availability"
+            },
+            {
+                "type": "Suite",
+                "availability": "Subject to availability"
+            }
+        ],
+        "extra_bed_policy": {
+            "adults": "Chargeable and subject to availability.",
+            "children": "Chargeable for children aged 6 years and below, subject to availability."
+        },
+        "long_stay_policy": {
+            "description": "We can extend our best rate for stays longer than a month. Please provide your contact details and trip information for further assistance."
+        },
+        "source_url": "https://www.fareasthospitality.com/en/hotels/orchard-rendezvous-hotel",
+        "manager_contacts": [],
+        "contact_leads": [
+            {
+                "url": "https://www.fareasthospitality.com/en/press-and-media/far-east-hospitality-achieves-largest-number-of-gstc-certified-properties-in-singapore",
+                "title": "Far East Hospitality Achieves Largest Number of GSTC-Certified...",
+                "body": "Seth Wang, General Manager of Control Union Singapore Pte Ltd, commented, \"Far East Hospitality's achievement of GSTC certification for 16 sites is a remarkable accomplishment that...",
+                "query": "site:fareasthospitality.com \"general manager\"",
+                "score": 50,
+                "evidence_type": "unknown",
+                "confidence": "medium",
+                "action": "review_or_scrape_if_needed",
+                "matched_role": "general manager",
+                "title_role": null,
+                "body_role": "general manager",
+                "reasons": [
+                    "Official hotel domain matched",
+                    "Location matched: ['singapore']",
+                    "Tier 1 role matched in body/snippet: general manager",
+                    "Evidence type: unknown"
+                ],
+                "primary_title": "Far East Hospitality Achieves Largest Number of GSTC-Certified...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/Press-and-Media/Hidden/The-Quincy-Hotel-Singapore-Best-Luxury-Boutique-Hotel",
+                "title": "The Quincy Hotel is Singapore’s Best Luxury Boutique Hotel",
+                "body": "...we look forward to hosting more aficionados of luxurious, trendy and exclusive hotel experiences from all over the world,” says Ng Khee Siong, Area General Manager, The Quincy Hotel.",
+                "query": "site:fareasthospitality.com \"general manager\"",
+                "score": 50,
+                "evidence_type": "unknown",
+                "confidence": "medium",
+                "action": "review_or_scrape_if_needed",
+                "matched_role": "general manager",
+                "title_role": null,
+                "body_role": "general manager",
+                "reasons": [
+                    "Official hotel domain matched",
+                    "Location matched: ['singapore']",
+                    "Tier 1 role matched in body/snippet: general manager",
+                    "Evidence type: unknown"
+                ],
+                "primary_title": "The Quincy Hotel is Singapore’s Best Luxury Boutique Hotel",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://sg.linkedin.com/in/pavachan-sagwanich-6b739516a",
+                "title": "Pavachan Sagwanich - Orchard Rendezvous Hotel... | LinkedIn",
+                "body": "· Experience: Orchard Rendezvous Hotel Singapore · Education: Rangsit University · Location: Singapore · 17 connections on LinkedIn. View Pavachan Sagwanich’s profile on LinkedIn, a professional community of 1 billion members.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['singapore', 'orchard']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Pavachan Sagwanich - Orchard Rendezvous Hotel...",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://my.linkedin.com/in/sangitha-balakrishnan-33799b165",
+                "title": "Sangitha Balakrishnan - Senior Guest Service Executive - Orchard...",
+                "body": "Trained new comers while operations hours. · Pengalaman: Orchard Rendezvous Hotel · Pendidikan: Politechnic Muadzam Shah,Pahang · Lokasi: Johor Bahru · 49 kenalan di LinkedIn. Lihat profil Sangitha Balakrishnan di LinkedIn, komuniti profesional dengan seramai 1 bilion ahli.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['orchard']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Sangitha Balakrishnan - Senior Guest Service Executive - Orchard...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://sg.linkedin.com/in/sithu-htet-554376116",
+                "title": "Sithu Htet - Orchard Rendezvous Hotel | LinkedIn",
+                "body": "· Experience: Orchard Rendezvous Hotel · Education: University of Distance Education, Madalay, Myanmar · Location: Singapore · 1 connection on LinkedIn. View Sithu Htet’s profile on LinkedIn, a professional community of 1 billion members.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['singapore', 'orchard']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Sithu Htet - Orchard Rendezvous Hotel",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://10times.com/e10x-prs8-dx36",
+                "title": "Workplace Summit Singapore (Apr 2025), Singapore - Conference",
+                "body": "Orchard Rendezvous Hotel by Far East Hospitality.Pan Pacific Orchard. from SGD 253.33. voco Orchard Singapore, an IHG Hotel.",
+                "query": "\"Orchard Rendezvous Hotel\" \"Orchard, Singapore\" \"general manager\" LinkedIn",
+                "score": 45,
+                "evidence_type": "unknown",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['singapore', 'orchard']",
+                    "No target role found",
+                    "Evidence type: unknown",
+                    "Current/recent signal found",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Workplace Summit Singapore (Apr 2025), Singapore - Conference",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/community-testimonials",
+                "title": "Support Community, Support Local Business and Talent",
+                "body": "Since then, the hotel’s management team has continued to engage us to collaborate on promoting the area's rich cultural heritage.Contact Us. (65) 9232 9238. sustainability@fareast.com.",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 35,
+                "evidence_type": "official_team_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_team_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Support Community, Support Local Business and Talent",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/customer-care-centre/our-services",
+                "title": "Business Development > Our Services",
+                "body": "Manage reservation. Book Now.Our Services. Business Models. Management. Leasehold. Franchise.",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 35,
+                "evidence_type": "official_team_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_team_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Business Development > Our Services",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/contact-corporate",
+                "title": "Do contact us electronically by submitting the online form with regards...",
+                "body": "Allow us to serve you better. To contact us electronically, please submit the online form below. You will receive an immediate on-screen confirmation letting you know we have received your...",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 30,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Do contact us electronically by submitting the online form with regards...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/contact-us",
+                "title": "Contact Us",
+                "body": "Do contact us electronically by submitting the online form with regards to your inquiries or reservation.Manage reservation. Book Now.",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 30,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Contact Us",
+                "primary_title_hotel_match": false
+            }
+        ],
+        "contact_debug_candidates": [
+            {
+                "url": "https://sg.linkedin.com/in/suqi-choo-a89b5746",
+                "title": "Suqi Choo - Assistant Front Office Manager - Far East... | LinkedIn",
+                "body": "Orchard Rendezvous Hotel. Running as the acting head of department with the absence of the FOM and RDM. Working directly with the Area General Manager.Duty Manager. Carlton City Hotel Singapore.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"Orchard, Singapore\" \"general manager\"",
+                "score": 102,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "front office manager",
+                "title_role": "front office manager",
+                "body_role": "general manager",
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['singapore', 'orchard']",
+                    "Tier 2 role matched in title: front office manager",
+                    "Evidence type: linkedin_person_profile"
+                ],
+                "primary_title": "Suqi Choo - Assistant Front Office Manager - Far East...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/press-and-media/made-in-singapore-room",
+                "title": "Far East Hospitality collaborates with young talents to design the...",
+                "body": "Their works are currently undergoing judging by a panel made up the Area General Manager of Village Hotels, Project Teams from Far East Hospitality, and Village Hotel Managers.",
+                "query": "site:fareasthospitality.com \"general manager\"",
+                "score": 85,
+                "evidence_type": "official_team_page",
+                "confidence": "high",
+                "action": "use_or_scrape",
+                "matched_role": "general manager",
+                "title_role": null,
+                "body_role": "general manager",
+                "reasons": [
+                    "Official hotel domain matched",
+                    "Location matched: ['singapore']",
+                    "Tier 1 role matched in body/snippet: general manager",
+                    "Evidence type: official_team_page",
+                    "Current/recent signal found"
+                ],
+                "primary_title": "Far East Hospitality collaborates with young talents to design the...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/press-and-media/far-east-hospitality-achieves-largest-number-of-gstc-certified-properties-in-singapore",
+                "title": "Far East Hospitality Achieves Largest Number of GSTC-Certified...",
+                "body": "Seth Wang, General Manager of Control Union Singapore Pte Ltd, commented, \"Far East Hospitality's achievement of GSTC certification for 16 sites is a remarkable accomplishment that...",
+                "query": "site:fareasthospitality.com \"general manager\"",
+                "score": 50,
+                "evidence_type": "unknown",
+                "confidence": "medium",
+                "action": "review_or_scrape_if_needed",
+                "matched_role": "general manager",
+                "title_role": null,
+                "body_role": "general manager",
+                "reasons": [
+                    "Official hotel domain matched",
+                    "Location matched: ['singapore']",
+                    "Tier 1 role matched in body/snippet: general manager",
+                    "Evidence type: unknown"
+                ],
+                "primary_title": "Far East Hospitality Achieves Largest Number of GSTC-Certified...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/Press-and-Media/Hidden/The-Quincy-Hotel-Singapore-Best-Luxury-Boutique-Hotel",
+                "title": "The Quincy Hotel is Singapore’s Best Luxury Boutique Hotel",
+                "body": "...we look forward to hosting more aficionados of luxurious, trendy and exclusive hotel experiences from all over the world,” says Ng Khee Siong, Area General Manager, The Quincy Hotel.",
+                "query": "site:fareasthospitality.com \"general manager\"",
+                "score": 50,
+                "evidence_type": "unknown",
+                "confidence": "medium",
+                "action": "review_or_scrape_if_needed",
+                "matched_role": "general manager",
+                "title_role": null,
+                "body_role": "general manager",
+                "reasons": [
+                    "Official hotel domain matched",
+                    "Location matched: ['singapore']",
+                    "Tier 1 role matched in body/snippet: general manager",
+                    "Evidence type: unknown"
+                ],
+                "primary_title": "The Quincy Hotel is Singapore’s Best Luxury Boutique Hotel",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://sg.linkedin.com/in/pavachan-sagwanich-6b739516a",
+                "title": "Pavachan Sagwanich - Orchard Rendezvous Hotel... | LinkedIn",
+                "body": "· Experience: Orchard Rendezvous Hotel Singapore · Education: Rangsit University · Location: Singapore · 17 connections on LinkedIn. View Pavachan Sagwanich’s profile on LinkedIn, a professional community of 1 billion members.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['singapore', 'orchard']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Pavachan Sagwanich - Orchard Rendezvous Hotel...",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://my.linkedin.com/in/sangitha-balakrishnan-33799b165",
+                "title": "Sangitha Balakrishnan - Senior Guest Service Executive - Orchard...",
+                "body": "Trained new comers while operations hours. · Pengalaman: Orchard Rendezvous Hotel · Pendidikan: Politechnic Muadzam Shah,Pahang · Lokasi: Johor Bahru · 49 kenalan di LinkedIn. Lihat profil Sangitha Balakrishnan di LinkedIn, komuniti profesional dengan seramai 1 bilion ahli.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['orchard']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Sangitha Balakrishnan - Senior Guest Service Executive - Orchard...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://sg.linkedin.com/in/sithu-htet-554376116",
+                "title": "Sithu Htet - Orchard Rendezvous Hotel | LinkedIn",
+                "body": "· Experience: Orchard Rendezvous Hotel · Education: University of Distance Education, Madalay, Myanmar · Location: Singapore · 1 connection on LinkedIn. View Sithu Htet’s profile on LinkedIn, a professional community of 1 billion members.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"general manager\"",
+                "score": 45,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['singapore', 'orchard']",
+                    "No target role found",
+                    "Evidence type: linkedin_person_profile",
+                    "LinkedIn profile capped because no target role matched",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Sithu Htet - Orchard Rendezvous Hotel",
+                "primary_title_hotel_match": true
+            },
+            {
+                "url": "https://10times.com/e10x-prs8-dx36",
+                "title": "Workplace Summit Singapore (Apr 2025), Singapore - Conference",
+                "body": "Orchard Rendezvous Hotel by Far East Hospitality.Pan Pacific Orchard. from SGD 253.33. voco Orchard Singapore, an IHG Hotel.",
+                "query": "\"Orchard Rendezvous Hotel\" \"Orchard, Singapore\" \"general manager\" LinkedIn",
+                "score": 45,
+                "evidence_type": "unknown",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Hotel alias matched: orchard rendezvous hotel",
+                    "Location matched: ['singapore', 'orchard']",
+                    "No target role found",
+                    "Evidence type: unknown",
+                    "Current/recent signal found",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Workplace Summit Singapore (Apr 2025), Singapore - Conference",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/community-testimonials",
+                "title": "Support Community, Support Local Business and Talent",
+                "body": "Since then, the hotel’s management team has continued to engage us to collaborate on promoting the area's rich cultural heritage.Contact Us. (65) 9232 9238. sustainability@fareast.com.",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 35,
+                "evidence_type": "official_team_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_team_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Support Community, Support Local Business and Talent",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/customer-care-centre/our-services",
+                "title": "Business Development > Our Services",
+                "body": "Manage reservation. Book Now.Our Services. Business Models. Management. Leasehold. Franchise.",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 35,
+                "evidence_type": "official_team_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_team_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Business Development > Our Services",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/contact-corporate",
+                "title": "Do contact us electronically by submitting the online form with regards...",
+                "body": "Allow us to serve you better. To contact us electronically, please submit the online form below. You will receive an immediate on-screen confirmation letting you know we have received your...",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 30,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Do contact us electronically by submitting the online form with regards...",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/contact-us",
+                "title": "Contact Us",
+                "body": "Do contact us electronically by submitting the online form with regards to your inquiries or reservation.Manage reservation. Book Now.",
+                "query": "site:fareasthospitality.com management team contact",
+                "score": 30,
+                "evidence_type": "official_contact_page",
+                "confidence": "weak_lead",
+                "action": "store_as_weak_lead",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Official hotel domain matched",
+                    "No target location match",
+                    "No target role found",
+                    "Evidence type: official_contact_page",
+                    "Candidate capped because no target role matched"
+                ],
+                "primary_title": "Contact Us",
+                "primary_title_hotel_match": false
+            },
+            {
+                "url": "https://sg.linkedin.com/in/md-sufian-arshad-985027ab",
+                "title": "Md Sufian Arshad - Pan Pacific Orchard, Singapore | LinkedIn",
+                "body": "· Experience: Pan Pacific Orchard, Singapore · Location: Singapore · 299 connections on LinkedIn. View Md Sufian Arshad’s profile on LinkedIn, a professional community of 1 billion members.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"general manager\"",
+                "score": 0,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "No hotel/property match"
+                ]
+            },
+            {
+                "url": "https://sg.linkedin.com/in/pamela-ng-50768b53",
+                "title": "Pamela Ng - Director of Sales | LinkedIn",
+                "body": "Director of Sales · Experience: W Singapore - Sentosa Cove · Location: Singapore · 500+ connections on LinkedIn. View Pamela Ng’s profile on LinkedIn, a professional community of 1 billion members.",
+                "query": "site:linkedin.com/in \"Orchard Rendezvous Hotel\" \"Orchard, Singapore\" \"general manager\"",
+                "score": 0,
+                "evidence_type": "linkedin_person_profile",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "No hotel/property match"
+                ]
+            },
+            {
+                "url": "https://www.tripadvisor.in/ShowUserReviews-g294265-d306186-r137036468-Orchard_Rendezvous_Hotel_by_Far_East_Hospitality-Singapore.html",
+                "title": "Good Hotel - Review of Orchard Rendezvous Hotel by... - Tripadvisor",
+                "body": "KheeSiong, General Manager at Orchard Rendezvous Hotel by Far East Hospitality, responded to this reviewResponded 21 August 2012. Dear Valued Guest. It was our pleasure to have you as our guest and I am pleased that you have enjoyed the stay with us.",
+                "query": "\"Orchard Rendezvous Hotel\" \"Orchard, Singapore\" \"general manager\" LinkedIn",
+                "score": 0,
+                "evidence_type": "unknown",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Bad contact source/ad/directory"
+                ]
+            },
+            {
+                "url": "https://www.tripadvisor.ca/Hotels-g294265-zfa3-zfn7291602-Singapore-Hotels.html",
+                "title": "THE 10 BEST Orchard Road (Singapore) Hotels with a Pool 2026...",
+                "body": "YOTEL Singapore Orchard Road. Shangri-La Singapore. Orchard Rendezvous Hotel by Far East Hospitality.voco Orchard Singapore by IHG. Sheraton Towers Singapore.",
+                "query": "\"Orchard Rendezvous Hotel\" \"Orchard, Singapore\" \"general manager\" LinkedIn",
+                "score": 0,
+                "evidence_type": "unknown",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Bad contact source/ad/directory"
+                ]
+            },
+            {
+                "url": "https://www.tripadvisor.com/Hotel_Review-g294265-d306186-Reviews-or2610-Orchard_Rendezvous_Hotel_by_Far_East_Hospitality-Singapore.html",
+                "title": "Orchard rendezvous hotel by far east hospitality...",
+                "body": "The hotel's well-appointed amenities, such as a large pool and varied breakfast options, earn frequent commendation, although some reviewers mention that certain furnishings feel dated.Response from KheeSiong, General Manager at Orchard Rendezvous Hotel by Far East Hospitality.",
+                "query": "\"Orchard Rendezvous Hotel\" \"general manager\" joined appointed promoted",
+                "score": 0,
+                "evidence_type": "unknown",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Bad contact source/ad/directory"
+                ]
+            },
+            {
+                "url": "https://www.tripadvisor.com.tw/Hotel_Review-g294265-d306186-Reviews-Orchard_Rendezvous_Hotel_by_Far_East_Hospitality-Singapore.html",
+                "title": "乌节广场酒店 (新加坡) - Orchard Rendezvous Hotel by Far East...",
+                "body": "Melvin Lim Area General Manager.The Orchard Rendezvous team hopes that you can have a chance to visit your family before the turn of the year. Please feel free to email me at pushpalatha@fareast.com.sg if I can be of any assistance during your stay.",
+                "query": "\"Orchard Rendezvous Hotel\" \"general manager\" joined appointed promoted",
+                "score": 0,
+                "evidence_type": "unknown",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Bad contact source/ad/directory"
+                ]
+            },
+            {
+                "url": "https://www.tripadvisor.com/Hotel_Review-g294265-d306186-Reviews-or2380-Orchard_Rendezvous_Hotel_by_Far_East_Hospitality-Singapore.html",
+                "title": "Orchard rendezvous hotel by far east hospitality...",
+                "body": "Orchard Rendezvous Hotel is honestly one of the best locations to stay in Singapore. It is very close to the MRT and conveniently located near almost all major attractions.Response from MelvinLimWP, General Manager at Orchard Rendezvous Hotel by Far East Hospitality.",
+                "query": "\"Orchard Rendezvous Hotel\" \"general manager\" email",
+                "score": 0,
+                "evidence_type": "unknown",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Bad contact source/ad/directory"
+                ]
+            },
+            {
+                "url": "https://www.fareasthospitality.com/en/press-and-media/the-outpost-hotel-at-sentosa-officially-joins-small-luxury-hotels-of-the-world",
+                "title": "The Outpost Hotel at Sentosa Officially Joins Small Luxury Hotels of...",
+                "body": "Orchard Rendezvous Hotel, Singapore.Rendezvous Hotel Perth Scarborough, Australia.",
+                "query": "\"Orchard Rendezvous Hotel\" \"general manager\" email",
+                "score": 0,
+                "evidence_type": "unknown",
+                "confidence": "reject",
+                "action": "reject",
+                "matched_role": null,
+                "title_role": null,
+                "body_role": null,
+                "reasons": [
+                    "Blocked by bad URL filter"
+                ]
+            }
+        ]
     }
 ]

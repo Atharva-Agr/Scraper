@@ -1,5 +1,4 @@
 from ddgs import DDGS  # type: ignore
-
 from config import area, location, max_search_results
 from url_utils import clean_url, is_bad_url, is_probably_relevant
 

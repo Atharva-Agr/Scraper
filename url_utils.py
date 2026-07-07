@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 from config import area, location
+import re
 
 BAD_DOMAINS = [
     #################----------------------------- could get user to add
@@ -71,10 +72,25 @@ BAD_EXTENSIONS = [
     ".zip",
 ]
 
+SOFT_BAD_DOMAIN_PATTERNS = [
+    r"^hotels?-[a-z0-9-]+\.(com|net)$",
+    r"^hotel[a-z0-9-]+\.net$",
+]
+
 
 def get_domain(url: str) -> str:
     return urlparse(url).netloc.lower().replace("www.", "")
 
+def is_likely_hotel_mirror_domain(url: str) -> bool:
+    domain = get_domain(url)
+
+    if not domain:
+        return False
+
+    return any(
+        re.match(pattern, domain)
+        for pattern in SOFT_BAD_DOMAIN_PATTERNS
+    )
 
 def has_bad_extension(url: str) -> bool:
     parsed = urlparse(url)
@@ -233,6 +249,9 @@ def score_url(url: str) -> int:
     path = urlparse(url).path.strip("/")
     if path == "":
         score -= 30
+
+    if is_likely_hotel_mirror_domain(url):
+        score -= 60
 
     return score
 

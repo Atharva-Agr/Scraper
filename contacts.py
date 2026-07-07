@@ -1,6 +1,6 @@
 import re
 from typing import List, Optional
-
+from purge_utils import load_purge_list, get_purge_decision_for_candidate
 from ddgs import DDGS  # type: ignore
 from pydantic import BaseModel
 from scrapegraphai.graphs import SmartScraperGraph
@@ -53,8 +53,58 @@ def add_unique_alias(aliases: List[dict], alias: str, weight: int):
 # Hotel and location matching
 # -----------------------------
 
+GENERIC_HOTEL_WORDS = {
+    "hotel",
+    "hotels",
+    "the",
+    "inn",
+    "suites",
+    "suite",
+    "resort",
+    "resorts",
+    "plaza",
+    "palace",
+    "hospitality",
+}
+
+
+def get_location_words_for_hotel(hotel: dict) -> set[str]:
+    values = [
+        hotel.get("location"),
+        hotel.get("area"),
+        area,
+        location,
+        *nearby_area_terms,
+    ]
+
+
+    raw_name = str(hotel.get("hotel_name") or "")
+    name_parts = [
+        part.strip()
+        for part in re.split(r"[,|/•·;]+", raw_name)
+        if part.strip()
+    ]
+
+    if len(name_parts) > 1:
+        values.extend(name_parts[1:])
+
+    location_words = set()
+
+    for value in values:
+        text = normalize_text(value)
+
+        if not text:
+            continue
+
+        for word in text.split():
+            if len(word) > 2 and not word.isdigit():
+                location_words.add(word)
+
+    return location_words
+
 def build_hotel_aliases(hotel: dict) -> List[dict]:
-    hotel_name = normalize_text(hotel.get("hotel_name"))
+    raw_name = str(hotel.get("hotel_name") or "").strip()
+    hotel_name = normalize_text(raw_name)
 
     aliases = []
 
@@ -63,59 +113,42 @@ def build_hotel_aliases(hotel: dict) -> List[dict]:
 
     add_unique_alias(aliases, hotel_name, 35)
 
+    name_parts = [
+        normalize_text(part)
+        for part in re.split(r"[,|/•·;]+", raw_name)
+        if normalize_text(part)
+    ]
+
+    if name_parts:
+        add_unique_alias(aliases, name_parts[0], 32)
+
     words = hotel_name.split()
+    location_words = get_location_words_for_hotel(hotel)
 
-    # Example:
-    # "pride plaza hotel aerocity new delhi"
-    # -> "pride plaza hotel aerocity"
-    without_city_words = [
+    without_location_words = [
         word for word in words
-        if word not in {"new", "delhi"}
+        if word not in location_words
     ]
 
-    if len(without_city_words) >= 2:
-        add_unique_alias(aliases, " ".join(without_city_words), 28)
+    if len(without_location_words) >= 2:
+        add_unique_alias(aliases, " ".join(without_location_words), 28)
 
-    # Example:
-    # "pride plaza hotel aerocity"
-    # -> "pride plaza aerocity"
-    without_generic_hotel_words = [
-        word for word in without_city_words
-        if word not in {"hotel", "hotels", "the"}
-    ]
-
-    if len(without_generic_hotel_words) >= 2:
-        add_unique_alias(aliases, " ".join(without_generic_hotel_words), 25)
-
-    # Stronger short property name.
-    # Example:
-    # "pride plaza"
     property_words = [
-        word for word in words
-        if word not in {
-            "hotel",
-            "hotels",
-            "the",
-            "new",
-            "delhi",
-            "aerocity",
-            "airport",
-            "inn",
-            "suites",
-            "resort",
-        }
+        word for word in without_location_words
+        if word not in GENERIC_HOTEL_WORDS
     ]
 
     if len(property_words) >= 2:
+        add_unique_alias(aliases, " ".join(property_words), 25)
+
+    
+    if len(property_words) >= 2:
         add_unique_alias(aliases, " ".join(property_words[:2]), 20)
 
-    # Add area-combined version if useful.
+
     if property_words and area:
-        add_unique_alias(
-            aliases,
-            f"{' '.join(property_words[:2])} {area}",
-            28
-        )
+        short_property = " ".join(property_words[:2])
+        add_unique_alias(aliases, f"{short_property} {area}", 28)
 
     return aliases
 
@@ -126,43 +159,40 @@ def build_location_aliases(hotel: dict) -> List[str]:
         hotel.get("area"),
         area,
         location,
+        *nearby_area_terms,
     ]
-
-    values.extend(nearby_area_terms)
 
     aliases = []
 
-    for value in values:
+    def add_alias(value) -> None:
         text = normalize_text(value)
 
         if not text:
+            return
+
+        if text.isdigit():
+            return
+
+        if len(text) <= 2:
+            return
+
+        if text not in aliases:
+            aliases.append(text)
+
+    for value in values:
+        if not value:
             continue
 
-        aliases.append(text)
+        # Add the full location phrase
+        add_alias(value)
 
-    known_terms = [
-        "aerocity",
-        "new delhi",
-        "delhi",
-        "hospitality district",
-        "igi",
-        "igi airport",
-        "rangpuri",
-        "mahipalpur",
-    ]
+        # Add useful chunks from comma/pipe/slash separated addresses
+        parts = re.split(r"[,|/•·;]+", str(value))
 
-    aliases.extend(known_terms)
+        for part in parts:
+            add_alias(part)
 
-    clean_aliases = []
-
-    for alias in aliases:
-        alias = normalize_text(alias)
-
-        if alias and alias not in clean_aliases:
-            clean_aliases.append(alias)
-
-    return clean_aliases
-
+    return aliases
 
 # -----------------------------
 # Search query building
@@ -220,6 +250,17 @@ def build_manager_search_queries(hotel: dict) -> List[str]:
 # -----------------------------
 # Candidate classification and scoring
 # -----------------------------
+
+def get_primary_linkedin_title(title: str) -> str:
+    title = str(title or "").strip()
+
+    if not title:
+        return ""
+
+    # Bing often glues multiple result titles together after "| LinkedIn"
+    parts = re.split(r"\|\s*LinkedIn", title, maxsplit=1, flags=re.IGNORECASE)
+
+    return parts[0].strip()
 
 def classify_contact_source(url: str, title: str, body: str) -> str:
     text = f"{url} {title} {body}".lower()
@@ -332,6 +373,17 @@ def get_role_tier(role: str | None) -> str | None:
                 return tier_name
 
     return None
+
+def is_target_contact_role(role: Optional[str]) -> bool:
+    if not role:
+        return False
+
+    clean_role = normalize_text(role)
+
+    return any(
+        clean_role == normalize_text(target_role)
+        for target_role in contact_roles
+    )
 
 def has_historical_signal(candidate: dict) -> bool:
     reasons = candidate.get("reasons") or []
@@ -483,7 +535,12 @@ def reject_candidate(candidate: dict, reason: str) -> dict:
     candidate["reasons"].append(reason)
     return candidate
 
-def score_contact_result(item: dict, hotel: dict, query: str = "") -> dict:
+def score_contact_result(
+    item: dict,
+    hotel: dict,
+    query: str = "",
+    purge_list: dict | None = None,
+) -> dict:
     url = clean_url(item.get("href") or item.get("url") or item.get("link") or "")
     title = str(item.get("title") or "")
     body = str(item.get("body") or "")
@@ -492,6 +549,12 @@ def score_contact_result(item: dict, hotel: dict, query: str = "") -> dict:
 
     if not url:
         return reject_candidate(candidate, "Missing URL")
+    
+    purge_decision = get_purge_decision_for_candidate(candidate, purge_list)
+
+    if purge_decision["blocked"]:
+        reason = "; ".join(purge_decision["reasons"]) or "Blocked by purge list"
+        return reject_candidate(candidate, reason)
 
     if is_bad_contact_source(url, title, body):
         return reject_candidate(candidate, "Bad contact source/ad/directory")
@@ -577,8 +640,24 @@ def score_contact_result(item: dict, hotel: dict, query: str = "") -> dict:
     # Role match
     # -----------------------------
 
-    title_role = find_target_role(title)
+    primary_title = get_primary_linkedin_title(title)
+
+    if "linkedin.com/in/" in url.lower():
+        title_role = find_target_role(primary_title)
+    else:
+        title_role = find_target_role(title)
+
     body_role = find_target_role(body)
+
+    candidate["primary_title"] = primary_title
+    primary_title_text = normalize_text(primary_title)
+
+    primary_title_hotel_match = any(
+        contains_phrase(primary_title_text, alias_item["alias"])
+        for alias_item in hotel_aliases
+    )
+
+    candidate["primary_title_hotel_match"] = primary_title_hotel_match
     matched_role = title_role or body_role
 
     candidate["title_role"] = title_role
@@ -657,18 +736,26 @@ def score_contact_result(item: dict, hotel: dict, query: str = "") -> dict:
     # Final result
     # -----------------------------
 
+    if purge_decision["penalty"]:
+        score += purge_decision["penalty"]
+        reasons.extend(purge_decision["reasons"])
+
     confidence, action = get_confidence_and_action(score)
 
     candidate["score"] = score
     candidate["confidence"] = confidence
     candidate["action"] = action
     candidate["reasons"] = reasons
+    candidate["purge_blocked"] = False
+    candidate["purge_penalty"] = purge_decision["penalty"]
+    candidate["purge_reasons"] = purge_decision["reasons"]
 
     return candidate
 
 def discover_contact_candidates(hotel: dict) -> List[dict]:
     candidates = []
     seen = set()
+    purge_list = load_purge_list()
 
     queries = build_manager_search_queries(hotel)
 
@@ -676,10 +763,15 @@ def discover_contact_candidates(hotel: dict) -> List[dict]:
         for query in queries:
             print(f"\nContact search: {query}")
 
-            results = list(ddgs.text(
-                query,
-                max_results=max_contact_search_results
-            ))
+            try:
+                results = list(ddgs.text(
+                    query,
+                    max_results=max_contact_search_results
+                ))
+
+            except Exception as error:
+                print(f"Search skipped: {type(error).__name__}: {error}")
+                continue
 
             for item in results:
                 url = clean_url(item.get("href") or item.get("url") or item.get("link") or "")
@@ -692,7 +784,7 @@ def discover_contact_candidates(hotel: dict) -> List[dict]:
 
                 seen.add(url)
 
-                candidate = score_contact_result(item, hotel, query)
+                candidate = score_contact_result(item, hotel, query,purge_list=purge_list)
                 candidates.append(candidate)
 
                 print(
@@ -725,6 +817,11 @@ def clean_search_title(title: str) -> str:
 def format_role(role: str) -> str:
     return " ".join(word.capitalize() for word in role.split())
 
+def has_current_signal(candidate: dict) -> bool:
+    return any(
+        "Current/recent signal" in reason
+        for reason in candidate.get("reasons", [])
+    )
 
 def contact_from_linkedin_search_result(candidate: dict) -> Optional[dict]:
     url = candidate.get("url") or ""
@@ -733,31 +830,31 @@ def contact_from_linkedin_search_result(candidate: dict) -> Optional[dict]:
     if "linkedin.com/in/" not in url.lower():
         return None
 
-    matched_role = candidate.get("matched_role")
-    role_tier = get_role_tier(matched_role)
+    title_role = candidate.get("title_role")
 
-    if not matched_role:
+    if not title_role:
         return None
 
-    # Only Tier 1 and Tier 2 become confirmed contacts from LinkedIn.
-    # Tier 3 stays as a lead.
-    if role_tier not in ["tier_1", "tier_2"]:
+    if not is_target_contact_role(title_role):
+        return None
+    
+    if not candidate.get("primary_title_hotel_match") and not has_current_signal(candidate):
         return None
 
-    # Require strong score.
     if candidate.get("score", 0) < 75:
         return None
 
-    # Historical LinkedIn evidence should be a lead, not confirmed.
-    if has_historical_signal(candidate):
+    if has_historical_signal(candidate) and not has_current_signal(candidate):
         return None
 
-    # If there is a wrong city/property warning, do not confirm directly.
     reasons = candidate.get("reasons") or []
+
     if any("Possible wrong city/property" in reason for reason in reasons):
         return None
 
-    clean_title = clean_search_title(title)
+    clean_title = clean_search_title(
+        candidate.get("primary_title") or title
+    )
 
     parts = [
         part.strip()
@@ -775,7 +872,7 @@ def contact_from_linkedin_search_result(candidate: dict) -> Optional[dict]:
 
     return {
         "name": name,
-        "role": format_role(matched_role),
+        "role": format_role(title_role),
         "email": None,
         "linkedin_url": url,
         "profile_url": url,
@@ -938,6 +1035,10 @@ def contact_from_evidence_result(candidate: dict) -> Optional[dict]:
     body = candidate.get("body") or ""
     url = candidate.get("url") or ""
 
+    if candidate.get("evidence_type") == "news_or_interview":
+        if not candidate.get("title_role"):
+            return None
+    
     if evidence_type not in ["news_or_interview", "recent_joining_post"]:
         return None
 
@@ -954,7 +1055,7 @@ def contact_from_evidence_result(candidate: dict) -> Optional[dict]:
 
     role_tier = get_role_tier(role)
 
-    if role_tier not in ["tier_1", "tier_2"]:
+    if not is_target_contact_role(role):
         return None
 
     text = f"{title} {body}"
