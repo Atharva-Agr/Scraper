@@ -1,9 +1,8 @@
 from urllib.parse import urlparse
-from config import area, location
+from config import area, location, nearby_area_terms
 import re
 
 BAD_DOMAINS = [
-    #################----------------------------- could get user to add
     "facebook",
     "instagram",
     "youtube",
@@ -60,7 +59,6 @@ BAD_DOMAINS = [
     "ihotel",
 ]
 
-
 BAD_EXTENSIONS = [
     ".jpg",
     ".jpeg",
@@ -79,7 +77,8 @@ SOFT_BAD_DOMAIN_PATTERNS = [
 
 
 def get_domain(url: str) -> str:
-    return urlparse(url).netloc.lower().replace("www.", "")
+    return urlparse(str(url or "")).netloc.lower().replace("www.", "")
+
 
 def is_likely_hotel_mirror_domain(url: str) -> bool:
     domain = get_domain(url)
@@ -92,6 +91,7 @@ def is_likely_hotel_mirror_domain(url: str) -> bool:
         for pattern in SOFT_BAD_DOMAIN_PATTERNS
     )
 
+
 def has_bad_extension(url: str) -> bool:
     parsed = urlparse(url)
     path = parsed.path.lower()
@@ -99,7 +99,7 @@ def has_bad_extension(url: str) -> bool:
 
 
 def is_bad_url(url: str) -> bool:
-    url_lower = url.lower()
+    url_lower = str(url or "").lower()
     domain = get_domain(url)
 
     if not url_lower.startswith(("http://", "https://")):
@@ -111,7 +111,6 @@ def is_bad_url(url: str) -> bool:
     if has_bad_extension(url):
         return True
 
-    # Avoid foreign mirror sites for now.
     if domain.endswith(".cn"):
         return True
 
@@ -119,7 +118,7 @@ def is_bad_url(url: str) -> bool:
 
 
 def is_probably_relevant(url: str) -> bool:
-    url_lower = url.lower()
+    url_lower = str(url or "").lower()
 
     useful_words = [
         "hotel",
@@ -145,16 +144,18 @@ def is_probably_relevant(url: str) -> bool:
 
 
 def clean_url(url: str) -> str:
-    return url.strip()
+    return str(url or "").strip()
+
 
 def classify_url(url: str) -> str:
-    url_lower = url.lower()
+    url_lower = str(url or "").lower()
     domain = get_domain(url)
 
     chain_words = [
         "marriott", "hyatt", "ihg", "accor", "radisson",
         "hilton", "sheraton", "novotel", "pullman", "ibis",
-        "holidayinn", "lemontree"
+        "holidayinn", "lemontree", "wyndham", "millennium",
+        "fourseasons", "shangri", "mandarinoriental",
     ]
 
     directory_words = [
@@ -165,11 +166,9 @@ def classify_url(url: str) -> str:
 
     hotel_words = [
         "hotel", "inn", "suites", "resort", "stay",
-        "plaza", "palace", "hospitality"
+        "plaza", "palace", "hospitality", "motel", "lodge"
     ]
 
-    # Check directory first so "hotels-of-new-delhi.com"
-    # does not get treated as an official hotel site.
     if any(word in domain or word in url_lower for word in directory_words):
         return "directory"
 
@@ -181,8 +180,9 @@ def classify_url(url: str) -> str:
 
     return "unknown"
 
+
 def score_url(url: str) -> int:
-    url_lower = url.lower()
+    url_lower = str(url or "").lower()
 
     if is_bad_url(url):
         return -9999
@@ -193,18 +193,16 @@ def score_url(url: str) -> int:
     if source_type == "direct_hotel_site":
         score += 100
     elif source_type == "chain":
-        score += 55
+        score += 75
     elif source_type == "directory":
         score += 15
     else:
-        score += 5
+        score += 10
 
     location_terms = [
         area.lower(),
         location.lower(),
-        "airport",
-        "hospitality district",
-        "business district"
+        *[str(term or "").lower() for term in nearby_area_terms],
     ]
 
     for term in location_terms:
@@ -213,12 +211,13 @@ def score_url(url: str) -> int:
 
     good_paths = [
         "contact", "contact-us", "overview", "hotel",
-        "rooms", "meeting", "meetings", "events", "facilities"
+        "rooms", "meeting", "meetings", "events", "facilities",
+        "accommodation", "about",
     ]
 
     for path in good_paths:
         if path in url_lower:
-            score += 10
+            score += 8
 
     weak_paths = [
         "photos", "gallery", "review", "reviews", "blog",
@@ -244,14 +243,14 @@ def score_url(url: str) -> int:
 
     for path in weak_paths:
         if path in url_lower:
-            score -= 20
+            score -= 15
 
-    path = urlparse(url).path.strip("/")
+    path = urlparse(str(url or "")).path.strip("/")
     if path == "":
-        score -= 30
+        score -= 15
 
     if is_likely_hotel_mirror_domain(url):
-        score -= 60
+        score -= 50
 
     return score
 
@@ -260,20 +259,45 @@ def score_url(url: str) -> int:
 # Balance urls
 # -----------------------------
 
-def select_balanced_urls(grouped_urls):
+def select_balanced_urls(grouped_urls, complete_search: bool = False, target_count: int | None = None):
     selected = []
     seen = set()
 
+    if complete_search:
+        all_urls = []
+
+        for group_name, urls in (grouped_urls or {}).items():
+            for url in urls:
+                if url in seen:
+                    continue
+
+                seen.add(url)
+                all_urls.append((group_name, url, score_url(url)))
+
+        # Complete search should include more high-confidence sources, not only
+        # the small balanced sample used for partial searches.
+        all_urls = [item for item in all_urls if item[2] >= 25]
+        all_urls = sorted(all_urls, key=lambda item: item[2], reverse=True)
+
+        if target_count is None:
+            target_count = len(all_urls)
+
+        # Try enough URLs to approach the estimate, while leaving room for failed scrapes.
+        limit = max(target_count * 2, target_count + 20)
+
+        return [url for _, url, _ in all_urls[:limit]]
+
     limits = {
         "mid_size_hotels": 8,
+        "independent_mid_size_hotels": 8,
+        "official_area_hotels": 8,
         "chain_hotels": 3,
         "banquet_business_hotels": 3,
+        "general_area_hotels": 3,
     }
 
     for group_name, limit in limits.items():
-        urls = grouped_urls.get(group_name, [])
-
-        # Sort best URLs first inside each bucket.
+        urls = (grouped_urls or {}).get(group_name, [])
         urls = sorted(urls, key=score_url, reverse=True)
 
         count = 0
@@ -293,4 +317,3 @@ def select_balanced_urls(grouped_urls):
                 break
 
     return selected
-

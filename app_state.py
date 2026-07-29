@@ -18,30 +18,19 @@ DEFAULT_PURGE_FILE = DATA_DIR / "purge_list.json"
 
 
 DEFAULT_SEARCH_SETTINGS = {
-    "location": "Delhi",
-    "area": "Aerocity",
-    "hotel_type": "business hotels",
-    "extra_info": "Prefer hotels with banquet halls or conference facilities.",
-    "nearby_area_terms": [
-        "Mahipalpur",
-        "Rangpuri",
-        "IGI",
-        "airport",
-        "hospitality district",
-    ],
-    "excluded_location_terms": [
-        "Noida",
-        "Gurgaon",
-        "Gurugram",
-        "Ghaziabad",
-        "Faridabad",
-    ],
+    "location": "",
+    "area": "",
+    "hotel_type": "Business hotel",
+    "extra_info": "",
+    "nearby_area_terms": [],
+    "excluded_location_terms": [],
     "max_search_results": 10,
     "max_pages_to_try": 8,
     "target_hotels": 3,
     "max_contact_search_results": 4,
     "max_contact_pages_per_hotel": 2,
 }
+
 
 
 DEFAULT_APP_SETTINGS = {
@@ -56,28 +45,69 @@ DEFAULT_APP_SETTINGS = {
 
 DEFAULT_ROLE_PROFILES = {
     "default": {
+        "description": "Final default contact profile for hotel decision-maker outreach.",
         "target_roles": [
             "general manager",
+            "hotel manager",
+            "resident manager",
+            "operations manager",
+            "director of operations",
+            "rooms division manager",
+            "director of rooms",
+            "executive housekeeper",
+            "housekeeping manager",
+            "procurement manager",
+            "purchasing manager",
+            "purchase manager",
+            "director of procurement",
         ],
         "secondary_roles": [
-            "hotel manager",
+            "owner",
+            "managing director",
             "cluster general manager",
             "area general manager",
-            "operations manager",
-            "front office manager",
+            "regional general manager",
             "director of sales",
+            "director of sales and marketing",
+            "sales manager",
+            "events manager",
+            "event manager",
+            "banquet manager",
+            "catering sales manager",
+            "director of food and beverage",
+            "food and beverage manager",
+            "front office manager",
+            "facilities manager",
+            "engineering manager",
+            "director of engineering",
+            "finance manager",
         ],
         "ignored_roles": [
             "chef",
+            "executive chef",
+            "sous chef",
             "pastry chef",
-            "guest service executive",
             "human resources",
             "director of human resources",
+            "hr manager",
+            "talent acquisition",
+            "recruiter",
+            "front desk agent",
+            "receptionist",
+            "guest service executive",
+            "guest relations executive",
+            "concierge",
+            "security manager",
+            "spa manager",
+            "marketing executive",
             "sales executive",
+            "reservations agent",
+            "reservation agent",
+            "intern",
+            "trainee",
         ],
     }
 }
-
 
 def get_now_stamp() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -153,6 +183,43 @@ def save_app_settings(settings: dict) -> None:
     write_json_file(APP_SETTINGS_FILE, settings)
 
 
+
+def merge_role_values(existing_values: list[Any], default_values: list[Any]) -> list[str]:
+    merged = clean_string_list(existing_values or [])
+    seen = {value.lower() for value in merged}
+
+    for value in clean_string_list(default_values or []):
+        key = value.lower()
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        merged.append(value)
+
+    return merged
+
+
+def merge_role_profile_defaults(profile: dict, default_profile: dict) -> dict:
+    if not isinstance(profile, dict):
+        profile = {}
+
+    return {
+        "description": profile.get("description") or default_profile.get("description", ""),
+        "target_roles": merge_role_values(
+            profile.get("target_roles") or [],
+            default_profile.get("target_roles") or [],
+        ),
+        "secondary_roles": merge_role_values(
+            profile.get("secondary_roles") or [],
+            default_profile.get("secondary_roles") or [],
+        ),
+        "ignored_roles": merge_role_values(
+            profile.get("ignored_roles") or [],
+            default_profile.get("ignored_roles") or [],
+        ),
+    }
+
 def load_role_profiles() -> dict:
     ensure_app_folders()
 
@@ -161,8 +228,14 @@ def load_role_profiles() -> dict:
     if not isinstance(data, dict):
         data = deepcopy(DEFAULT_ROLE_PROFILES)
 
-    if "default" not in data:
-        data["default"] = deepcopy(DEFAULT_ROLE_PROFILES["default"])
+    for profile_name, default_profile in DEFAULT_ROLE_PROFILES.items():
+        if profile_name not in data:
+            data[profile_name] = deepcopy(default_profile)
+        else:
+            data[profile_name] = merge_role_profile_defaults(
+                data[profile_name],
+                default_profile,
+            )
 
     save_role_profiles(data)
 

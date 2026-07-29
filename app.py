@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import json
+import re
 import sys
 import traceback
 import webbrowser
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QAbstractItemView,
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QFormLayout,
@@ -21,7 +26,10 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QSpinBox,
+    QSplitter,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -31,13 +39,13 @@ from PySide6.QtWidgets import (
 )
 
 from app_state import (
+    DATA_DIR,
     DEFAULT_ROLE_PROFILES,
     get_active_cache_path,
     get_active_purge_path,
     get_search_settings,
     load_app_settings,
     load_role_profiles,
-    save_app_settings,
     save_role_profile,
     save_search_settings,
     set_active_cache_path,
@@ -46,9 +54,7 @@ from app_state import (
 )
 
 from pipeline import (
-    export_contacts_csv,
-    export_hotels_csv,
-    export_leads_csv,
+    add_hotel_to_cache,
     get_contact_rows,
     get_hotel_summary_rows,
     load_cache,
@@ -77,12 +83,37 @@ from purge_utils import (
 )
 
 
+SEARCH_LISTS_DIR = DATA_DIR / "search_lists"
+EXPORTS_DIR = Path("exports")
+
+HOTEL_TYPE_OPTIONS = [
+    "All hotels",
+    "Business hotel",
+    "Boutique hotel",
+    "Independent hotel",
+    "Chain hotel",
+    "Budget hotel",
+    "Luxury hotel",
+    "Airport hotel",
+    "Hotel with banquet facilities",
+    "Hotel with conference facilities",
+    "Custom",
+]
+
+
 class PipelineWorker(QObject):
     finished = Signal(list)
     failed = Signal(str)
     log = Signal(str)
 
-    def __init__(self, task_name: str, settings: dict, roles: list[str], cache_path: Path, purge_path: Path):
+    def __init__(
+        self,
+        task_name: str,
+        settings: dict,
+        roles: list[str],
+        cache_path: Path,
+        purge_path: Path,
+    ):
         super().__init__()
 
         self.task_name = task_name
@@ -137,7 +168,10 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("LinenGrass Lead Manager")
-        self.resize(1450, 850)
+        self.fit_to_screen()
+
+        SEARCH_LISTS_DIR.mkdir(parents=True, exist_ok=True)
+        EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
         self.settings = load_app_settings()
         self.role_profiles = load_role_profiles()
@@ -147,22 +181,67 @@ class MainWindow(QMainWindow):
 
         self.worker_thread = None
         self.worker = None
+        self.advanced_result_view = False
 
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        self.build_setup_tab()
-        self.build_cache_tab()
-        self.build_hotel_review_tab()
-        self.build_contact_review_tab()
-        self.build_purge_tab()
+        self.setStyleSheet("""
+            QGroupBox { font-weight: 600; margin-top: 8px; }
+            QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }
+            QLineEdit, QComboBox, QSpinBox { min-height: 26px; }
+            QPushButton { min-height: 28px; padding-left: 10px; padding-right: 10px; }
+            QTextEdit { min-height: 160px; }
+            QLabel#searchPreview {
+                padding: 8px;
+                border: 1px solid #b8b8b8;
+                border-radius: 6px;
+                font-weight: 500;
+            }
+        """)
+
+        self.build_search_tab()
+        self.build_results_tab()
+        self.build_contacts_tab()
+        self.build_lists_tab()
+        self.build_advanced_tab()
         self.build_export_tab()
 
-        self.refresh_all_tables()
+        self.refresh_all()
 
     # -----------------------------
     # Helpers
     # -----------------------------
+
+    def fit_to_screen(self):
+        screen = QApplication.primaryScreen()
+
+        if not screen:
+            self.resize(1200, 800)
+            return
+
+        available = screen.availableGeometry()
+        width = max(900, available.width())
+        height = max(650, available.height())
+
+        self.setGeometry(available.x(), available.y(), width, height)
+        self.setMinimumSize(min(900, width), min(600, height))
+
+    def add_responsive_tab(self, content: QWidget, title: str):
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(content)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        self.tabs.addTab(scroll_area, title)
+
+    def make_wrapped_label(self, text: str = "") -> QLabel:
+        label = QLabel(text)
+        label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        return label
 
     def show_info(self, message: str):
         QMessageBox.information(self, "LinenGrass", message)
@@ -192,24 +271,72 @@ class MainWindow(QMainWindow):
 
         return selected[0].row()
 
-    def selected_hotel_index(self) -> int:
-        row = self.selected_table_row(self.hotel_table)
+    def slugify(self, value: str) -> str:
+        value = str(value or "search").lower()
+        value = re.sub(r"[^a-z0-9]+", "-", value)
+        value = value.strip("-")
+        return value or "search"
 
-        if row < 0:
-            return -1
+    def make_named_search_path(self) -> Path:
+        search_name = self.search_name_input.text().strip()
 
-        item = self.hotel_table.item(row, 0)
+        if not search_name:
+            search_name = f"{self.area_input.text()} {self.location_input.text()} hotels"
 
-        if not item:
-            return -1
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{self.slugify(search_name)}_{timestamp}.json"
+        return SEARCH_LISTS_DIR / filename
 
-        return int(item.text())
+    def get_hotel_type_from_ui(self) -> str:
+        selected = self.hotel_type_dropdown.currentText()
+
+        if selected == "Custom":
+            return self.custom_hotel_type_input.text().strip() or "hotel"
+
+        return selected
+
+    def update_hotel_type_visibility(self, selected_text: str | None = None):
+        if selected_text is None:
+            selected_text = self.hotel_type_dropdown.currentText()
+
+        is_custom = selected_text == "Custom"
+        self.custom_hotel_type_input.setVisible(is_custom)
+
+        if hasattr(self, "custom_hotel_type_label"):
+            self.custom_hotel_type_label.setVisible(is_custom)
+
+        if is_custom:
+            self.custom_hotel_type_input.setFocus()
+
+        self.update_search_preview()
+
+    def update_search_preview(self):
+        if not hasattr(self, "search_preview_label"):
+            return
+
+        mode = "Complete search" if self.complete_search_checkbox.isChecked() else "Partial search"
+        hotel_type = self.get_hotel_type_from_ui()
+        area = self.area_input.text().strip() or "selected area"
+        location = self.location_input.text().strip() or "selected city"
+
+        if self.complete_search_checkbox.isChecked():
+            detail = "The app will search broadly and estimate coverage from discovered hotel sources."
+        else:
+            detail = f"The app will aim for about {self.target_hotels_input.value()} hotels."
+
+        self.search_preview_label.setText(
+            f"{mode}: {hotel_type} in {area}, {location}. {detail}"
+        )
 
     def get_current_settings_from_ui(self) -> dict:
-        return {
+        complete_search = self.complete_search_checkbox.isChecked()
+
+        settings = {
+            "search_name": self.search_name_input.text().strip(),
+            "complete_search": complete_search,
             "location": self.location_input.text().strip(),
             "area": self.area_input.text().strip(),
-            "hotel_type": self.hotel_type_input.text().strip(),
+            "hotel_type": self.get_hotel_type_from_ui(),
             "extra_info": self.extra_info_input.text().strip(),
             "nearby_area_terms": self.get_csv_list(self.nearby_terms_input),
             "excluded_location_terms": self.get_csv_list(self.excluded_terms_input),
@@ -218,39 +345,49 @@ class MainWindow(QMainWindow):
             "target_hotels": self.target_hotels_input.value(),
             "max_contact_search_results": self.contact_results_input.value(),
             "max_contact_pages_per_hotel": self.contact_pages_input.value(),
+            "target_roles": self.get_roles_from_ui() if hasattr(self, "target_roles_list") else [],
+            "secondary_roles": self.get_secondary_roles_from_ui() if hasattr(self, "secondary_roles_list") else [],
+            "ignored_roles": self.get_ignored_roles_from_ui() if hasattr(self, "ignored_roles_list") else [],
         }
 
-    def get_roles_from_ui(self) -> list[str]:
-        roles = []
+        if complete_search:
+            # Basic UI hides hotel-count controls. The backend still needs safe values.
+            # These are intentionally broad so complete search is not capped too early.
+            settings["target_hotels"] = 100
+            settings["max_pages_to_try"] = 100
+            settings["max_search_results"] = max(settings["max_search_results"], 20)
 
-        for index in range(self.target_roles_list.count()):
-            text = self.target_roles_list.item(index).text().strip()
+        return settings
+
+    def get_list_widget_values(self, list_widget: QListWidget) -> list[str]:
+        values = []
+
+        for index in range(list_widget.count()):
+            text = list_widget.item(index).text().strip()
 
             if text:
-                roles.append(text)
+                values.append(text)
 
-        return roles
+        return values
 
-    def save_current_setup(self):
+    def get_roles_from_ui(self) -> list[str]:
+        return self.get_list_widget_values(self.target_roles_list)
+
+    def get_secondary_roles_from_ui(self) -> list[str]:
+        return self.get_list_widget_values(self.secondary_roles_list)
+
+    def get_ignored_roles_from_ui(self) -> list[str]:
+        return self.get_list_widget_values(self.ignored_roles_list)
+
+    def save_current_setup(self, show_popup: bool = True):
         search_settings = self.get_current_settings_from_ui()
         save_search_settings(search_settings)
 
         profile_name = self.role_profile_name_input.text().strip() or "default"
 
-        target_roles = [
-            self.target_roles_list.item(index).text()
-            for index in range(self.target_roles_list.count())
-        ]
-
-        secondary_roles = [
-            self.secondary_roles_list.item(index).text()
-            for index in range(self.secondary_roles_list.count())
-        ]
-
-        ignored_roles = [
-            self.ignored_roles_list.item(index).text()
-            for index in range(self.ignored_roles_list.count())
-        ]
+        target_roles = self.get_roles_from_ui()
+        secondary_roles = self.get_secondary_roles_from_ui()
+        ignored_roles = self.get_ignored_roles_from_ui()
 
         save_role_profile(profile_name, target_roles, secondary_roles, ignored_roles)
         set_active_role_profile(profile_name)
@@ -258,53 +395,673 @@ class MainWindow(QMainWindow):
         self.settings = load_app_settings()
         self.role_profiles = load_role_profiles()
 
-        self.show_info("Settings and role profile saved.")
+        if show_popup:
+            self.show_info("Settings and role profile saved.")
 
-    def open_url_from_table(self, table: QTableWidget, column_name: str):
-        headers = [
-            table.horizontalHeaderItem(index).text()
-            for index in range(table.columnCount())
-        ]
+    def open_url(self, url: str):
+        url = str(url or "").strip()
 
-        if column_name not in headers:
-            self.show_error(f"Column not found: {column_name}")
+        if not url:
+            self.show_error("No URL available.")
             return
 
-        row = self.selected_table_row(table)
+        webbrowser.open(url)
+
+    def get_selected_hotel_index_from_results(self) -> int:
+        row = self.selected_table_row(self.results_table)
 
         if row < 0:
-            self.show_error("Select a row first.")
-            return
+            return -1
 
-        column = headers.index(column_name)
-        item = table.item(row, column)
+        item = self.results_table.item(row, 0)
 
-        if not item or not item.text().strip():
-            self.show_error("No URL in selected row.")
-            return
+        if not item:
+            return -1
 
-        webbrowser.open(item.text().strip())
+        return int(item.text())
+
+    def get_selected_hotel(self) -> tuple[int, dict | None]:
+        index = self.get_selected_hotel_index_from_results()
+
+        if index < 0 or index >= len(self.hotels):
+            return -1, None
+
+        return index, self.hotels[index]
+
+    def set_advanced_result_view(self, checked: bool):
+        self.advanced_result_view = checked
+        self.refresh_results_table()
+        self.refresh_selected_hotel_details()
+        self.refresh_contacts_tab()
 
     # -----------------------------
-    # Setup tab
+    # Search tab
     # -----------------------------
 
-    def build_setup_tab(self):
+    def build_search_tab(self):
         tab = QWidget()
         layout = QHBoxLayout(tab)
 
         left = QVBoxLayout()
         right = QVBoxLayout()
 
-        search_box = QGroupBox("Search Setup")
+        search_box = QGroupBox("Search")
         form = QFormLayout(search_box)
 
         search_settings = get_search_settings(self.settings)
 
+        self.search_name_input = QLineEdit()
+        self.search_name_input.setPlaceholderText("Example: Area + hotel type search")
+
         self.location_input = QLineEdit(search_settings["location"])
         self.area_input = QLineEdit(search_settings["area"])
-        self.hotel_type_input = QLineEdit(search_settings["hotel_type"])
+
+        self.hotel_type_dropdown = QComboBox()
+        self.hotel_type_dropdown.addItems(HOTEL_TYPE_OPTIONS)
+        default_hotel_type = str(search_settings.get("hotel_type") or "Business hotel")
+        matched_index = self.hotel_type_dropdown.findText(default_hotel_type, Qt.MatchFixedString)
+
+        if matched_index >= 0:
+            self.hotel_type_dropdown.setCurrentIndex(matched_index)
+        else:
+            custom_index = self.hotel_type_dropdown.findText("Custom", Qt.MatchFixedString)
+            self.hotel_type_dropdown.setCurrentIndex(custom_index)
+
+        self.custom_hotel_type_label = QLabel("Custom hotel type")
+        self.custom_hotel_type_input = QLineEdit(default_hotel_type)
+        self.custom_hotel_type_input.setPlaceholderText("Example: serviced apartment hotel")
+        self.hotel_type_dropdown.currentTextChanged.connect(self.update_hotel_type_visibility)
+        self.custom_hotel_type_input.textChanged.connect(self.update_search_preview)
+
         self.extra_info_input = QLineEdit(search_settings["extra_info"])
+        self.extra_info_input.setPlaceholderText("Example: banquet halls, conference rooms, corporate events")
+
+        self.complete_search_checkbox = QCheckBox("Complete search")
+        self.complete_search_checkbox.setToolTip(
+            "Complete search hides hotel-count controls and tries to find as many hotels in the area as possible."
+        )
+        self.complete_search_checkbox.stateChanged.connect(self.update_complete_search_visibility)
+
+        self.contact_results_input = QSpinBox()
+        self.contact_results_input.setRange(1, 50)
+        self.contact_results_input.setValue(search_settings["max_contact_search_results"])
+        self.contact_results_input.setToolTip(
+            "How many contact-search results to check per hotel. Higher is slower but can find more leads."
+        )
+
+        self.partial_search_box = QGroupBox("Partial search size")
+        partial_form = QFormLayout(self.partial_search_box)
+
+        self.target_hotels_input = QSpinBox()
+        self.target_hotels_input.setRange(1, 100)
+        self.target_hotels_input.setValue(search_settings["target_hotels"])
+        self.target_hotels_input.valueChanged.connect(self.update_search_preview)
+
+        partial_hint = QLabel(
+            "Use partial search for quick tests or focused lead lists. "
+            "Use complete search when you want broad area coverage."
+        )
+        partial_hint.setWordWrap(True)
+
+        partial_form.addRow("Hotels to find", self.target_hotels_input)
+        partial_form.addRow("", partial_hint)
+
+        self.search_preview_label = QLabel()
+        self.search_preview_label.setWordWrap(True)
+        self.search_preview_label.setObjectName("searchPreview")
+
+        form.addRow("Search list name", self.search_name_input)
+        form.addRow("Location / City", self.location_input)
+        form.addRow("Area / Neighbourhood", self.area_input)
+        form.addRow("Hotel type", self.hotel_type_dropdown)
+        form.addRow(self.custom_hotel_type_label, self.custom_hotel_type_input)
+        form.addRow("Extra requirements", self.extra_info_input)
+        form.addRow("Search mode", self.complete_search_checkbox)
+        form.addRow("Contact search depth", self.contact_results_input)
+        form.addRow("Preview", self.search_preview_label)
+
+        for widget in [
+            self.search_name_input,
+            self.location_input,
+            self.area_input,
+            self.extra_info_input,
+        ]:
+            widget.textChanged.connect(self.update_search_preview)
+
+        self.complete_search_checkbox.stateChanged.connect(lambda _: self.update_search_preview())
+        self.contact_results_input.valueChanged.connect(self.update_search_preview)
+        self.update_hotel_type_visibility()
+        self.update_complete_search_visibility()
+
+        left.addWidget(search_box)
+        left.addWidget(self.partial_search_box)
+
+        run_box = QGroupBox("Run")
+        run_layout = QVBoxLayout(run_box)
+
+        full_run_btn = QPushButton("Run Search + Contacts")
+        discovery_btn = QPushButton("Run Hotel Search Only")
+        contacts_btn = QPushButton("Run Contacts On Current List")
+
+        full_run_btn.clicked.connect(lambda: self.start_pipeline_task("full"))
+        discovery_btn.clicked.connect(lambda: self.start_pipeline_task("discovery"))
+        contacts_btn.clicked.connect(lambda: self.start_pipeline_task("contacts"))
+
+        self.log_box = QTextEdit()
+        self.log_box.setReadOnly(True)
+
+        run_layout.addWidget(full_run_btn)
+        run_layout.addWidget(discovery_btn)
+        run_layout.addWidget(contacts_btn)
+        run_layout.addWidget(QLabel("Progress / Logs"))
+        run_layout.addWidget(self.log_box)
+
+        right.addWidget(run_box)
+
+        layout.addLayout(left, 1)
+        layout.addLayout(right, 2)
+
+        self.add_responsive_tab(tab, "Search")
+
+    def update_complete_search_visibility(self):
+        self.partial_search_box.setVisible(not self.complete_search_checkbox.isChecked())
+        self.update_search_preview()
+
+    # -----------------------------
+    # Results tab
+    # -----------------------------
+
+    def build_results_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        top_row = QHBoxLayout()
+        self.active_list_label = self.make_wrapped_label(str(self.cache_path))
+        self.results_advanced_checkbox = QCheckBox("Advanced result view")
+        self.results_advanced_checkbox.stateChanged.connect(
+            lambda state: self.set_advanced_result_view(state == Qt.Checked)
+        )
+
+        top_row.addWidget(QLabel("Active list:"))
+        top_row.addWidget(self.active_list_label, 1)
+        top_row.addWidget(self.results_advanced_checkbox)
+
+        splitter = QSplitter(Qt.Horizontal)
+
+        self.results_table = QTableWidget()
+        self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.results_table.itemSelectionChanged.connect(self.refresh_selected_hotel_details)
+
+        self.hotel_details_box = QTextEdit()
+        self.hotel_details_box.setReadOnly(True)
+
+        splitter.addWidget(self.results_table)
+        splitter.addWidget(self.hotel_details_box)
+        splitter.setSizes([650, 800])
+
+        button_row = QHBoxLayout()
+
+        approve_btn = QPushButton("Approve")
+        reject_btn = QPushButton("Reject")
+        delete_btn = QPushButton("Remove From List")
+        open_btn = QPushButton("Open Website / Source")
+        contacts_btn = QPushButton("Run Contacts For This List")
+
+        approve_btn.clicked.connect(lambda: self.set_selected_result_status("approved"))
+        reject_btn.clicked.connect(lambda: self.set_selected_result_status("rejected"))
+        delete_btn.clicked.connect(self.remove_selected_hotel_from_list)
+        open_btn.clicked.connect(self.open_selected_hotel_url)
+        contacts_btn.clicked.connect(lambda: self.start_pipeline_task("contacts"))
+
+        button_row.addWidget(approve_btn)
+        button_row.addWidget(reject_btn)
+        button_row.addWidget(delete_btn)
+        button_row.addWidget(open_btn)
+        button_row.addWidget(contacts_btn)
+
+        layout.addLayout(top_row)
+        layout.addWidget(splitter)
+        layout.addLayout(button_row)
+
+        self.add_responsive_tab(tab, "Results")
+
+    def get_basic_hotel_rows(self) -> list[dict]:
+        rows = []
+
+        for index, hotel in enumerate(self.hotels):
+            rows.append(
+                {
+                    "index": index,
+                    "hotel_name": hotel.get("hotel_name"),
+                    "location": hotel.get("location") or hotel.get("area"),
+                    "phone": hotel.get("phone"),
+                    "email": hotel.get("email"),
+                    "website": hotel.get("website") or hotel.get("source_url"),
+                    "status": hotel.get("review_status"),
+                    "confirmed": len(hotel.get("manager_contacts") or []),
+                    "possible": len(hotel.get("contact_leads") or []),
+                }
+            )
+
+        return rows
+
+    def refresh_results_table(self):
+        if self.advanced_result_view:
+            rows = get_hotel_summary_rows(self.hotels)
+        else:
+            rows = self.get_basic_hotel_rows()
+
+        self.fill_table(self.results_table, rows)
+
+    def refresh_selected_hotel_details(self):
+        _, hotel = self.get_selected_hotel()
+
+        if not hotel:
+            self.hotel_details_box.setPlainText("Select a hotel to view details.")
+            return
+
+        if self.advanced_result_view:
+            self.hotel_details_box.setPlainText(json.dumps(hotel, indent=4, ensure_ascii=False))
+            return
+
+        lines = [
+            f"Hotel: {hotel.get('hotel_name') or ''}",
+            f"Location: {hotel.get('location') or ''}",
+            f"Area: {hotel.get('area') or ''}",
+            f"Website: {hotel.get('website') or hotel.get('source_url') or ''}",
+            f"General number: {hotel.get('phone') or ''}",
+            f"Email: {hotel.get('email') or ''}",
+            f"Hotel type: {hotel.get('hotel_type') or ''}",
+            f"Chain/Independent: {hotel.get('chain_or_independent') or ''}",
+            f"Rating: {hotel.get('rating') or ''}",
+            f"Status: {hotel.get('review_status') or ''}",
+            f"Notes: {hotel.get('notes') or ''}",
+            "",
+            "Review summary:",
+            str(hotel.get("review_summary") or ""),
+            "",
+            "Facilities:",
+            self.format_list(hotel.get("facilities") or []),
+            "",
+            "Room types:",
+            self.format_list(hotel.get("room_types") or []),
+            "",
+            "Room pricing:",
+            self.format_list(hotel.get("room_pricing") or []),
+            "",
+            f"Confirmed contacts: {len(hotel.get('manager_contacts') or [])}",
+            f"Possible contacts: {len(hotel.get('contact_leads') or [])}",
+        ]
+
+        self.hotel_details_box.setPlainText("\n".join(lines))
+
+    def format_list(self, values: Any) -> str:
+        if not values:
+            return ""
+
+        if isinstance(values, list):
+            formatted = []
+
+            for value in values:
+                if isinstance(value, dict):
+                    formatted.append(json.dumps(value, ensure_ascii=False))
+                else:
+                    formatted.append(str(value))
+
+            return "\n".join(f"- {item}" for item in formatted)
+
+        return str(values)
+
+    def set_selected_result_status(self, status: str):
+        index, _ = self.get_selected_hotel()
+
+        if index < 0:
+            self.show_error("Select a hotel first.")
+            return
+
+        self.hotels = update_hotel_status(index, status, self.cache_path)
+        self.refresh_all()
+
+    def remove_selected_hotel_from_list(self):
+        index, hotel = self.get_selected_hotel()
+
+        if index < 0 or hotel is None:
+            self.show_error("Select a hotel first.")
+            return
+
+        del self.hotels[index]
+        save_cache(self.hotels, self.cache_path)
+        self.refresh_all()
+
+    def open_selected_hotel_url(self):
+        _, hotel = self.get_selected_hotel()
+
+        if not hotel:
+            self.show_error("Select a hotel first.")
+            return
+
+        self.open_url(hotel.get("website") or hotel.get("source_url"))
+
+    # -----------------------------
+    # Contacts tab
+    # -----------------------------
+
+    def build_contacts_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        top_row = QHBoxLayout()
+
+        self.contact_hotel_dropdown = QComboBox()
+        self.contact_hotel_dropdown.currentIndexChanged.connect(self.refresh_contact_dropdown)
+
+        self.contact_selector_dropdown = QComboBox()
+        self.contact_selector_dropdown.currentIndexChanged.connect(self.refresh_selected_contact_details)
+
+        self.contacts_advanced_checkbox = QCheckBox("Advanced contact view")
+        self.contacts_advanced_checkbox.stateChanged.connect(
+            lambda state: self.set_advanced_result_view(state == Qt.Checked)
+        )
+
+        top_row.addWidget(QLabel("Hotel"))
+        top_row.addWidget(self.contact_hotel_dropdown, 1)
+        top_row.addWidget(QLabel("Contact"))
+        top_row.addWidget(self.contact_selector_dropdown, 1)
+        top_row.addWidget(self.contacts_advanced_checkbox)
+
+        self.contact_details_box = QTextEdit()
+        self.contact_details_box.setReadOnly(True)
+
+        button_row = QHBoxLayout()
+
+        confirm_btn = QPushButton("Confirm")
+        possible_btn = QPushButton("Move To Possible")
+        doubtful_btn = QPushButton("Move To Doubtful")
+        outdated_btn = QPushButton("Mark Outdated")
+        wrong_hotel_btn = QPushButton("Wrong Hotel")
+        reject_btn = QPushButton("Reject")
+        open_btn = QPushButton("Open Source")
+
+        confirm_btn.clicked.connect(lambda: self.move_selected_contact("manager_contacts"))
+        possible_btn.clicked.connect(lambda: self.move_selected_contact("contact_leads"))
+        doubtful_btn.clicked.connect(lambda: self.move_selected_contact("contact_debug_candidates"))
+        outdated_btn.clicked.connect(lambda: self.set_selected_contact_status("outdated"))
+        wrong_hotel_btn.clicked.connect(lambda: self.set_selected_contact_status("wrong_hotel"))
+        reject_btn.clicked.connect(lambda: self.set_selected_contact_status("rejected"))
+        open_btn.clicked.connect(self.open_selected_contact_source)
+
+        button_row.addWidget(confirm_btn)
+        button_row.addWidget(possible_btn)
+        button_row.addWidget(doubtful_btn)
+        button_row.addWidget(outdated_btn)
+        button_row.addWidget(wrong_hotel_btn)
+        button_row.addWidget(reject_btn)
+        button_row.addWidget(open_btn)
+
+        layout.addLayout(top_row)
+        layout.addWidget(self.contact_details_box)
+        layout.addLayout(button_row)
+
+        self.add_responsive_tab(tab, "Contacts")
+
+    def get_all_contacts_for_hotel(self, hotel: dict) -> list[dict]:
+        contacts = []
+
+        for bucket, label in [
+            ("manager_contacts", "Confirmed"),
+            ("contact_leads", "Possible"),
+            ("contact_debug_candidates", "Doubtful"),
+        ]:
+            for index, contact in enumerate(hotel.get(bucket) or []):
+                item = dict(contact)
+                item["_bucket"] = bucket
+                item["_bucket_label"] = label
+                item["_contact_index"] = index
+                contacts.append(item)
+
+        return contacts
+
+    def refresh_contacts_tab(self):
+        current_index = self.contact_hotel_dropdown.currentIndex() if hasattr(self, "contact_hotel_dropdown") else -1
+
+        self.contact_hotel_dropdown.blockSignals(True)
+        self.contact_hotel_dropdown.clear()
+
+        for index, hotel in enumerate(self.hotels):
+            self.contact_hotel_dropdown.addItem(hotel.get("hotel_name") or f"Hotel {index + 1}", index)
+
+        if 0 <= current_index < self.contact_hotel_dropdown.count():
+            self.contact_hotel_dropdown.setCurrentIndex(current_index)
+
+        self.contact_hotel_dropdown.blockSignals(False)
+        self.refresh_contact_dropdown()
+
+    def refresh_contact_dropdown(self):
+        hotel_index = self.contact_hotel_dropdown.currentData()
+
+        self.contact_selector_dropdown.blockSignals(True)
+        self.contact_selector_dropdown.clear()
+
+        if hotel_index is None or not (0 <= int(hotel_index) < len(self.hotels)):
+            self.contact_selector_dropdown.blockSignals(False)
+            self.contact_details_box.setPlainText("No hotel selected.")
+            return
+
+        contacts = self.get_all_contacts_for_hotel(self.hotels[int(hotel_index)])
+
+        for contact in contacts:
+            name = contact.get("name") or contact.get("title") or "Unknown contact"
+            role = contact.get("role") or contact.get("matched_role") or "Unknown role"
+            label = contact.get("_bucket_label") or "Contact"
+            self.contact_selector_dropdown.addItem(f"{label}: {name} — {role}", contact)
+
+        self.contact_selector_dropdown.blockSignals(False)
+        self.refresh_selected_contact_details()
+
+    def refresh_selected_contact_details(self):
+        contact = self.contact_selector_dropdown.currentData()
+
+        if not contact:
+            self.contact_details_box.setPlainText("No contacts found for this hotel yet.")
+            return
+
+        if self.advanced_result_view:
+            self.contact_details_box.setPlainText(json.dumps(contact, indent=4, ensure_ascii=False))
+            return
+
+        lines = [
+            f"Name: {contact.get('name') or ''}",
+            f"Role: {contact.get('role') or contact.get('matched_role') or ''}",
+            f"Group: {contact.get('_bucket_label') or ''}",
+            f"Confidence: {contact.get('confidence') or ''}",
+            f"Source type: {contact.get('evidence_type') or ''}",
+            f"Source: {contact.get('source_url') or contact.get('url') or contact.get('profile_url') or ''}",
+            f"LinkedIn: {contact.get('linkedin_url') or ''}",
+            f"Email: {contact.get('email') or ''}",
+            f"Status: {contact.get('review_status') or ''}",
+            f"Notes: {contact.get('notes') or ''}",
+            "",
+            "Reasons:",
+            self.format_list(contact.get("evidence_reasons") or contact.get("reasons") or []),
+        ]
+
+        self.contact_details_box.setPlainText("\n".join(lines))
+
+    def selected_contact_identity(self):
+        hotel_index = self.contact_hotel_dropdown.currentData()
+        contact = self.contact_selector_dropdown.currentData()
+
+        if hotel_index is None or not contact:
+            return None
+
+        return int(hotel_index), contact.get("_bucket"), int(contact.get("_contact_index"))
+
+    def move_selected_contact(self, target_bucket: str):
+        identity = self.selected_contact_identity()
+
+        if not identity:
+            self.show_error("Select a contact first.")
+            return
+
+        hotel_index, source_bucket, contact_index = identity
+
+        self.hotels = move_contact_between_buckets(
+            hotel_index,
+            source_bucket,
+            contact_index,
+            target_bucket,
+            self.cache_path,
+        )
+
+        self.refresh_all()
+
+    def set_selected_contact_status(self, status: str):
+        identity = self.selected_contact_identity()
+
+        if not identity:
+            self.show_error("Select a contact first.")
+            return
+
+        hotel_index, bucket, contact_index = identity
+
+        self.hotels = update_contact_status(
+            hotel_index,
+            bucket,
+            contact_index,
+            status,
+            self.cache_path,
+        )
+
+        self.refresh_all()
+
+    def open_selected_contact_source(self):
+        contact = self.contact_selector_dropdown.currentData()
+
+        if not contact:
+            self.show_error("Select a contact first.")
+            return
+
+        self.open_url(contact.get("source_url") or contact.get("url") or contact.get("profile_url") or contact.get("linkedin_url"))
+
+    # -----------------------------
+    # Lists tab
+    # -----------------------------
+
+    def build_lists_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        info = QLabel("Each search is saved as its own list. Select lists here to open or merge them.")
+
+        self.lists_widget = QListWidget()
+        self.lists_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
+        button_row = QHBoxLayout()
+
+        open_btn = QPushButton("Open Selected List")
+        merge_btn = QPushButton("Merge Selected Lists")
+        refresh_btn = QPushButton("Refresh Lists")
+        save_as_btn = QPushButton("Save Current List As")
+
+        open_btn.clicked.connect(self.open_selected_search_list)
+        merge_btn.clicked.connect(self.merge_selected_search_lists)
+        refresh_btn.clicked.connect(self.refresh_lists_tab)
+        save_as_btn.clicked.connect(self.save_current_list_as)
+
+        button_row.addWidget(open_btn)
+        button_row.addWidget(merge_btn)
+        button_row.addWidget(refresh_btn)
+        button_row.addWidget(save_as_btn)
+
+        layout.addWidget(info)
+        layout.addWidget(self.lists_widget)
+        layout.addLayout(button_row)
+
+        self.add_responsive_tab(tab, "Lists")
+
+    def refresh_lists_tab(self):
+        self.lists_widget.clear()
+
+        for path in sorted(SEARCH_LISTS_DIR.glob("*.json")):
+            self.lists_widget.addItem(str(path))
+
+        root_cache = Path("hotel_cache.json")
+        if root_cache.exists():
+            self.lists_widget.addItem(str(root_cache.resolve()))
+
+    def get_selected_list_paths(self) -> list[Path]:
+        return [Path(item.text()) for item in self.lists_widget.selectedItems()]
+
+    def open_selected_search_list(self):
+        paths = self.get_selected_list_paths()
+
+        if not paths:
+            self.show_error("Select a list first.")
+            return
+
+        self.cache_path = paths[0]
+        set_active_cache_path(self.cache_path)
+        self.hotels = load_cache(self.cache_path)
+        self.active_list_label.setText(str(self.cache_path))
+        self.refresh_all()
+
+    def merge_selected_search_lists(self):
+        paths = self.get_selected_list_paths()
+
+        if len(paths) < 2:
+            self.show_error("Select at least two lists to merge.")
+            return
+
+        merged_hotels = []
+
+        for path in paths:
+            merged_hotels.extend(load_cache(path))
+
+        merged_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        merged_path = SEARCH_LISTS_DIR / merged_name
+
+        save_cache(merged_hotels, merged_path)
+        self.cache_path = merged_path
+        set_active_cache_path(self.cache_path)
+        self.hotels = load_cache(self.cache_path)
+        self.active_list_label.setText(str(self.cache_path))
+        self.refresh_all()
+        self.show_info(f"Merged lists saved to:\n{merged_path}")
+
+    def save_current_list_as(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save current list as",
+            str(SEARCH_LISTS_DIR / "new_search_list.json"),
+            "JSON Files (*.json)",
+        )
+
+        if not path:
+            return
+
+        self.cache_path = Path(path)
+        set_active_cache_path(self.cache_path)
+        save_cache(self.hotels, self.cache_path)
+        self.active_list_label.setText(str(self.cache_path))
+        self.refresh_all()
+
+    # -----------------------------
+    # Advanced tab
+    # -----------------------------
+
+    def build_advanced_tab(self):
+        tab = QWidget()
+        layout = QHBoxLayout(tab)
+
+        left = QVBoxLayout()
+        right = QVBoxLayout()
+
+        search_settings = get_search_settings(self.settings)
+
+        advanced_search_box = QGroupBox("Advanced Search Controls")
+        advanced_form = QFormLayout(advanced_search_box)
+
         self.nearby_terms_input = QLineEdit(", ".join(search_settings["nearby_area_terms"]))
         self.excluded_terms_input = QLineEdit(", ".join(search_settings["excluded_location_terms"]))
 
@@ -313,36 +1070,20 @@ class MainWindow(QMainWindow):
         self.max_search_results_input.setValue(search_settings["max_search_results"])
 
         self.max_pages_input = QSpinBox()
-        self.max_pages_input.setRange(1, 100)
+        self.max_pages_input.setRange(1, 500)
         self.max_pages_input.setValue(search_settings["max_pages_to_try"])
 
-        self.target_hotels_input = QSpinBox()
-        self.target_hotels_input.setRange(1, 100)
-        self.target_hotels_input.setValue(search_settings["target_hotels"])
-
-        self.contact_results_input = QSpinBox()
-        self.contact_results_input.setRange(1, 50)
-        self.contact_results_input.setValue(search_settings["max_contact_search_results"])
-
         self.contact_pages_input = QSpinBox()
-        self.contact_pages_input.setRange(1, 20)
+        self.contact_pages_input.setRange(1, 50)
         self.contact_pages_input.setValue(search_settings["max_contact_pages_per_hotel"])
 
-        form.addRow("Location / City", self.location_input)
-        form.addRow("Area / Neighborhood", self.area_input)
-        form.addRow("Hotel Type", self.hotel_type_input)
-        form.addRow("Extra Info", self.extra_info_input)
-        form.addRow("Nearby Area Terms", self.nearby_terms_input)
-        form.addRow("Excluded Location Terms", self.excluded_terms_input)
-        form.addRow("Search Results", self.max_search_results_input)
-        form.addRow("Max Hotel Pages", self.max_pages_input)
-        form.addRow("Target Hotels", self.target_hotels_input)
-        form.addRow("Contact Results", self.contact_results_input)
-        form.addRow("Contact Pages", self.contact_pages_input)
+        advanced_form.addRow("Nearby area terms", self.nearby_terms_input)
+        advanced_form.addRow("Excluded area terms", self.excluded_terms_input)
+        advanced_form.addRow("Search results per query", self.max_search_results_input)
+        advanced_form.addRow("Max hotel pages to scrape", self.max_pages_input)
+        advanced_form.addRow("Contact pages per hotel", self.contact_pages_input)
 
-        left.addWidget(search_box)
-
-        role_box = QGroupBox("Editable Contact Roles")
+        role_box = QGroupBox("Contact Role Profiles")
         role_layout = QVBoxLayout(role_box)
 
         self.role_profile_name_input = QLineEdit(self.settings.get("active_role_profile", "default"))
@@ -364,7 +1105,7 @@ class MainWindow(QMainWindow):
             self.ignored_roles_list.addItem(role)
 
         self.new_role_input = QLineEdit()
-        self.new_role_input.setPlaceholderText("Role to add...")
+        self.new_role_input.setPlaceholderText("Role to add")
 
         role_buttons = QHBoxLayout()
 
@@ -372,59 +1113,132 @@ class MainWindow(QMainWindow):
         add_secondary_btn = QPushButton("Add Secondary")
         add_ignored_btn = QPushButton("Add Ignored")
         remove_role_btn = QPushButton("Remove Selected")
-        save_setup_btn = QPushButton("Save Setup")
+        load_final_roles_btn = QPushButton("Load Final Hotel Roles")
+        save_setup_btn = QPushButton("Save Settings")
 
         add_target_btn.clicked.connect(lambda: self.add_role_to_list(self.target_roles_list))
         add_secondary_btn.clicked.connect(lambda: self.add_role_to_list(self.secondary_roles_list))
         add_ignored_btn.clicked.connect(lambda: self.add_role_to_list(self.ignored_roles_list))
         remove_role_btn.clicked.connect(self.remove_selected_role)
+        load_final_roles_btn.clicked.connect(self.load_final_hotel_roles_to_ui)
         save_setup_btn.clicked.connect(self.save_current_setup)
 
         role_buttons.addWidget(add_target_btn)
         role_buttons.addWidget(add_secondary_btn)
         role_buttons.addWidget(add_ignored_btn)
         role_buttons.addWidget(remove_role_btn)
+        role_buttons.addWidget(load_final_roles_btn)
 
-        role_layout.addWidget(QLabel("Role profile name"))
+        role_layout.addWidget(QLabel("Profile name"))
         role_layout.addWidget(self.role_profile_name_input)
-        role_layout.addWidget(QLabel("Target roles"))
+        role_layout.addWidget(QLabel("Target roles — final confirmed contacts"))
         role_layout.addWidget(self.target_roles_list)
-        role_layout.addWidget(QLabel("Secondary roles"))
+        role_layout.addWidget(QLabel("Secondary roles — possible leads"))
         role_layout.addWidget(self.secondary_roles_list)
-        role_layout.addWidget(QLabel("Ignored roles"))
+        role_layout.addWidget(QLabel("Ignored roles — downrank/reject"))
         role_layout.addWidget(self.ignored_roles_list)
         role_layout.addWidget(self.new_role_input)
         role_layout.addLayout(role_buttons)
         role_layout.addWidget(save_setup_btn)
 
-        right.addWidget(role_box)
+        left.addWidget(advanced_search_box)
+        left.addWidget(role_box)
 
-        run_box = QGroupBox("Run Pipeline")
-        run_layout = QVBoxLayout(run_box)
+        cache_box = QGroupBox("Cache / List Controls")
+        cache_layout = QVBoxLayout(cache_box)
 
-        full_run_btn = QPushButton("Run Full Pipeline")
-        discovery_btn = QPushButton("Run Hotel Discovery Only")
-        contacts_btn = QPushButton("Run Contacts Only From Cache")
+        self.cache_path_label = self.make_wrapped_label(str(self.cache_path))
 
-        full_run_btn.clicked.connect(lambda: self.start_pipeline_task("full"))
-        discovery_btn.clicked.connect(lambda: self.start_pipeline_task("discovery"))
-        contacts_btn.clicked.connect(lambda: self.start_pipeline_task("contacts"))
+        open_cache_btn = QPushButton("Open Cache/List")
+        save_cache_btn = QPushButton("Save Current List")
+        manual_add_btn = QPushButton("Add Hotel Manually")
 
-        self.log_box = QTextEdit()
-        self.log_box.setReadOnly(True)
+        open_cache_btn.clicked.connect(self.open_cache_file)
+        save_cache_btn.clicked.connect(self.save_current_cache)
+        manual_add_btn.clicked.connect(self.add_manual_hotel_dialog)
 
-        run_layout.addWidget(full_run_btn)
-        run_layout.addWidget(discovery_btn)
-        run_layout.addWidget(contacts_btn)
-        run_layout.addWidget(QLabel("Logs"))
-        run_layout.addWidget(self.log_box)
+        cache_layout.addWidget(QLabel("Active cache/list"))
+        cache_layout.addWidget(self.cache_path_label)
+        cache_layout.addWidget(open_cache_btn)
+        cache_layout.addWidget(save_cache_btn)
+        cache_layout.addWidget(manual_add_btn)
 
-        right.addWidget(run_box)
+        purge_box = QGroupBox("Purge Rules")
+        purge_layout = QVBoxLayout(purge_box)
+        purge_form = QFormLayout()
 
-        layout.addLayout(left, 2)
-        layout.addLayout(right, 2)
+        self.purge_path_label = self.make_wrapped_label(str(self.purge_path))
+        self.purge_type_box = QComboBox()
+        self.purge_type_box.addItems([
+            "Hard URL",
+            "Hard Domain",
+            "Hard URL Contains",
+            "Hard Contact Name",
+            "Hard Text Pattern",
+            "Soft URL",
+            "Soft Domain",
+            "Soft URL Contains",
+            "Soft Text Pattern",
+        ])
 
-        self.tabs.addTab(tab, "Search Setup")
+        self.purge_value_input = QLineEdit()
+        self.purge_reason_input = QLineEdit()
+
+        add_purge_btn = QPushButton("Add Purge Rule")
+        open_purge_btn = QPushButton("Open Purge File")
+
+        add_purge_btn.clicked.connect(self.add_purge_rule)
+        open_purge_btn.clicked.connect(self.open_purge_file)
+
+        purge_form.addRow("Purge file", self.purge_path_label)
+        purge_form.addRow("Rule type", self.purge_type_box)
+        purge_form.addRow("Value", self.purge_value_input)
+        purge_form.addRow("Reason", self.purge_reason_input)
+
+        self.purge_view = QTextEdit()
+        self.purge_view.setReadOnly(True)
+
+        purge_layout.addLayout(purge_form)
+        purge_layout.addWidget(add_purge_btn)
+        purge_layout.addWidget(open_purge_btn)
+        purge_layout.addWidget(QLabel("Current purge list"))
+        purge_layout.addWidget(self.purge_view)
+
+        right.addWidget(cache_box)
+        right.addWidget(purge_box)
+
+        layout.addLayout(left, 1)
+        layout.addLayout(right, 1)
+
+        self.add_responsive_tab(tab, "Advanced")
+
+    def replace_role_list(self, list_widget: QListWidget, roles: list[str]):
+        list_widget.clear()
+
+        for role in roles:
+            text = str(role or "").strip()
+
+            if text:
+                list_widget.addItem(text)
+
+    def load_final_hotel_roles_to_ui(self):
+        profile = DEFAULT_ROLE_PROFILES["default"]
+
+        self.replace_role_list(
+            self.target_roles_list,
+            profile.get("target_roles", []),
+        )
+        self.replace_role_list(
+            self.secondary_roles_list,
+            profile.get("secondary_roles", []),
+        )
+        self.replace_role_list(
+            self.ignored_roles_list,
+            profile.get("ignored_roles", []),
+        )
+
+        self.role_profile_name_input.setText("default")
+        self.show_info("Final hotel contact roles loaded. Click Save Settings / Role Profile to keep them.")
 
     def add_role_to_list(self, list_widget: QListWidget):
         role = self.new_role_input.text().strip()
@@ -452,66 +1266,10 @@ class MainWindow(QMainWindow):
                 row = list_widget.row(item)
                 list_widget.takeItem(row)
 
-    # -----------------------------
-    # Cache tab
-    # -----------------------------
-
-    def build_cache_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        path_row = QHBoxLayout()
-
-        self.cache_path_label = QLabel(str(self.cache_path))
-
-        open_cache_btn = QPushButton("Open Cache")
-        save_cache_btn = QPushButton("Save Cache")
-        save_as_btn = QPushButton("Save Cache As")
-        reload_btn = QPushButton("Reload Cache")
-
-        open_cache_btn.clicked.connect(self.open_cache_file)
-        save_cache_btn.clicked.connect(self.save_current_cache)
-        save_as_btn.clicked.connect(self.save_cache_as)
-        reload_btn.clicked.connect(self.reload_cache)
-
-        path_row.addWidget(QLabel("Active cache:"))
-        path_row.addWidget(self.cache_path_label, 1)
-        path_row.addWidget(open_cache_btn)
-        path_row.addWidget(save_cache_btn)
-        path_row.addWidget(save_as_btn)
-        path_row.addWidget(reload_btn)
-
-        self.cache_table = QTableWidget()
-        self.cache_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.cache_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        action_row = QHBoxLayout()
-
-        approve_btn = QPushButton("Approve Hotel")
-        reject_btn = QPushButton("Reject Hotel")
-        duplicate_btn = QPushButton("Mark Duplicate")
-        open_source_btn = QPushButton("Open Source URL")
-
-        approve_btn.clicked.connect(lambda: self.set_selected_hotel_status("approved"))
-        reject_btn.clicked.connect(lambda: self.set_selected_hotel_status("rejected"))
-        duplicate_btn.clicked.connect(lambda: self.set_selected_hotel_status("duplicate"))
-        open_source_btn.clicked.connect(lambda: self.open_url_from_table(self.cache_table, "source_url"))
-
-        action_row.addWidget(approve_btn)
-        action_row.addWidget(reject_btn)
-        action_row.addWidget(duplicate_btn)
-        action_row.addWidget(open_source_btn)
-
-        layout.addLayout(path_row)
-        layout.addWidget(self.cache_table)
-        layout.addLayout(action_row)
-
-        self.tabs.addTab(tab, "Cache Manager")
-
     def open_cache_file(self):
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Open cache file",
+            "Open cache/list file",
             str(self.cache_path.parent),
             "JSON Files (*.json)",
         )
@@ -521,245 +1279,47 @@ class MainWindow(QMainWindow):
 
         self.cache_path = Path(path)
         set_active_cache_path(self.cache_path)
-        self.cache_path_label.setText(str(self.cache_path))
         self.hotels = load_cache(self.cache_path)
-        self.refresh_all_tables()
+        self.active_list_label.setText(str(self.cache_path))
+        self.cache_path_label.setText(str(self.cache_path))
+        self.refresh_all()
 
     def save_current_cache(self):
         save_cache(self.hotels, self.cache_path)
-        self.show_info("Cache saved.")
+        self.show_info("Current list saved.")
 
-    def save_cache_as(self):
-        path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save cache as",
-            str(self.cache_path),
-            "JSON Files (*.json)",
-        )
+    def add_manual_hotel_dialog(self):
+        hotel_name, ok = self.simple_input_dialog("Hotel name")
 
-        if not path:
+        if not ok or not hotel_name.strip():
             return
 
-        self.cache_path = Path(path)
-        set_active_cache_path(self.cache_path)
-        self.cache_path_label.setText(str(self.cache_path))
-        save_cache(self.hotels, self.cache_path)
-        self.show_info("Cache saved.")
+        website, _ = self.simple_input_dialog("Website/source URL")
+        phone, _ = self.simple_input_dialog("General phone/contact number")
+        email, _ = self.simple_input_dialog("Email")
 
-    def reload_cache(self):
-        self.hotels = load_cache(self.cache_path)
-        self.refresh_all_tables()
+        hotel = {
+            "hotel_name": hotel_name.strip(),
+            "location": self.location_input.text().strip(),
+            "area": self.area_input.text().strip(),
+            "website": website.strip(),
+            "source_url": website.strip(),
+            "phone": phone.strip(),
+            "email": email.strip(),
+            "review_status": "approved",
+            "manager_contacts": [],
+            "contact_leads": [],
+            "contact_debug_candidates": [],
+        }
 
-    def set_selected_hotel_status(self, status: str):
-        row = self.selected_table_row(self.cache_table)
+        self.hotels = add_hotel_to_cache(hotel, self.cache_path)
+        self.refresh_all()
 
-        if row < 0:
-            self.show_error("Select a hotel first.")
-            return
+    def simple_input_dialog(self, label: str) -> tuple[str, bool]:
+        from PySide6.QtWidgets import QInputDialog
 
-        hotel_index = int(self.cache_table.item(row, 0).text())
-        self.hotels = update_hotel_status(hotel_index, status, self.cache_path)
-        self.refresh_all_tables()
-
-    # -----------------------------
-    # Hotel review tab
-    # -----------------------------
-
-    def build_hotel_review_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        self.hotel_table = QTableWidget()
-        self.hotel_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.hotel_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        self.hotel_table.itemSelectionChanged.connect(self.refresh_contact_tables)
-
-        buttons = QHBoxLayout()
-
-        approve_btn = QPushButton("Approve")
-        reject_btn = QPushButton("Reject")
-        duplicate_btn = QPushButton("Duplicate")
-        enrich_selected_btn = QPushButton("Run Contacts For Cache")
-
-        approve_btn.clicked.connect(lambda: self.set_selected_hotel_status_from_hotel_table("approved"))
-        reject_btn.clicked.connect(lambda: self.set_selected_hotel_status_from_hotel_table("rejected"))
-        duplicate_btn.clicked.connect(lambda: self.set_selected_hotel_status_from_hotel_table("duplicate"))
-        enrich_selected_btn.clicked.connect(lambda: self.start_pipeline_task("contacts"))
-
-        buttons.addWidget(approve_btn)
-        buttons.addWidget(reject_btn)
-        buttons.addWidget(duplicate_btn)
-        buttons.addWidget(enrich_selected_btn)
-
-        layout.addWidget(self.hotel_table)
-        layout.addLayout(buttons)
-
-        self.tabs.addTab(tab, "Hotel Review")
-
-    def set_selected_hotel_status_from_hotel_table(self, status: str):
-        hotel_index = self.selected_hotel_index()
-
-        if hotel_index < 0:
-            self.show_error("Select a hotel first.")
-            return
-
-        self.hotels = update_hotel_status(hotel_index, status, self.cache_path)
-        self.refresh_all_tables()
-
-    # -----------------------------
-    # Contact review tab
-    # -----------------------------
-
-    def build_contact_review_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        self.contact_bucket_box = QComboBox()
-        self.contact_bucket_box.addItem("Confirmed contacts", "manager_contacts")
-        self.contact_bucket_box.addItem("Contact leads", "contact_leads")
-        self.contact_bucket_box.addItem("Debug candidates", "contact_debug_candidates")
-        self.contact_bucket_box.currentIndexChanged.connect(self.refresh_contact_tables)
-
-        self.contact_table = QTableWidget()
-        self.contact_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.contact_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        buttons = QHBoxLayout()
-
-        confirm_btn = QPushButton("Move To Confirmed")
-        lead_btn = QPushButton("Move To Leads")
-        debug_btn = QPushButton("Move To Debug")
-        reject_btn = QPushButton("Reject")
-        open_btn = QPushButton("Open Source")
-
-        confirm_btn.clicked.connect(lambda: self.move_selected_contact("manager_contacts"))
-        lead_btn.clicked.connect(lambda: self.move_selected_contact("contact_leads"))
-        debug_btn.clicked.connect(lambda: self.move_selected_contact("contact_debug_candidates"))
-        reject_btn.clicked.connect(lambda: self.set_selected_contact_status("rejected"))
-        open_btn.clicked.connect(lambda: self.open_url_from_table(self.contact_table, "source_url"))
-
-        buttons.addWidget(confirm_btn)
-        buttons.addWidget(lead_btn)
-        buttons.addWidget(debug_btn)
-        buttons.addWidget(reject_btn)
-        buttons.addWidget(open_btn)
-
-        layout.addWidget(self.contact_bucket_box)
-        layout.addWidget(self.contact_table)
-        layout.addLayout(buttons)
-
-        self.tabs.addTab(tab, "Contact Review")
-
-    def selected_contact_identity(self):
-        row = self.selected_table_row(self.contact_table)
-
-        if row < 0:
-            return None
-
-        hotel_index = int(self.contact_table.item(row, 0).text())
-        contact_index = int(self.contact_table.item(row, 1).text())
-        bucket = self.contact_table.item(row, 2).text()
-
-        return hotel_index, bucket, contact_index
-
-    def move_selected_contact(self, target_bucket: str):
-        identity = self.selected_contact_identity()
-
-        if not identity:
-            self.show_error("Select a contact first.")
-            return
-
-        hotel_index, source_bucket, contact_index = identity
-
-        self.hotels = move_contact_between_buckets(
-            hotel_index,
-            source_bucket,
-            contact_index,
-            target_bucket,
-            self.cache_path,
-        )
-
-        self.refresh_all_tables()
-
-    def set_selected_contact_status(self, status: str):
-        identity = self.selected_contact_identity()
-
-        if not identity:
-            self.show_error("Select a contact first.")
-            return
-
-        hotel_index, bucket, contact_index = identity
-
-        self.hotels = update_contact_status(
-            hotel_index,
-            bucket,
-            contact_index,
-            status,
-            self.cache_path,
-        )
-
-        self.refresh_all_tables()
-
-    # -----------------------------
-    # Purge tab
-    # -----------------------------
-
-    def build_purge_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        path_row = QHBoxLayout()
-
-        self.purge_path_label = QLabel(str(self.purge_path))
-
-        open_purge_btn = QPushButton("Open Purge File")
-        save_purge_btn = QPushButton("Save Purge File")
-
-        open_purge_btn.clicked.connect(self.open_purge_file)
-        save_purge_btn.clicked.connect(self.save_current_purge)
-
-        path_row.addWidget(QLabel("Active purge list:"))
-        path_row.addWidget(self.purge_path_label, 1)
-        path_row.addWidget(open_purge_btn)
-        path_row.addWidget(save_purge_btn)
-
-        form_box = QGroupBox("Add Purge Rule")
-        form = QFormLayout(form_box)
-
-        self.purge_type_box = QComboBox()
-        self.purge_type_box.addItems([
-            "Hard URL",
-            "Hard Domain",
-            "Hard URL Contains",
-            "Hard Contact Name",
-            "Hard Text Pattern",
-            "Soft URL",
-            "Soft Domain",
-            "Soft URL Contains",
-            "Soft Text Pattern",
-        ])
-
-        self.purge_value_input = QLineEdit()
-        self.purge_reason_input = QLineEdit()
-
-        add_purge_btn = QPushButton("Add Rule")
-        add_purge_btn.clicked.connect(self.add_purge_rule)
-
-        form.addRow("Rule Type", self.purge_type_box)
-        form.addRow("Value", self.purge_value_input)
-        form.addRow("Reason", self.purge_reason_input)
-        form.addRow(add_purge_btn)
-
-        self.purge_view = QTextEdit()
-        self.purge_view.setReadOnly(True)
-
-        layout.addLayout(path_row)
-        layout.addWidget(form_box)
-        layout.addWidget(QLabel("Current purge list"))
-        layout.addWidget(self.purge_view)
-
-        self.tabs.addTab(tab, "Purge List")
+        text, ok = QInputDialog.getText(self, "LinenGrass", label)
+        return text, ok
 
     def open_purge_file(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -776,11 +1336,6 @@ class MainWindow(QMainWindow):
         set_active_purge_path(self.purge_path)
         self.purge_path_label.setText(str(self.purge_path))
         self.refresh_purge_view()
-
-    def save_current_purge(self):
-        purge_list = load_purge_list(self.purge_path)
-        save_purge_list(purge_list, self.purge_path)
-        self.show_info("Purge list saved.")
 
     def add_purge_rule(self):
         purge_list = load_purge_list(self.purge_path)
@@ -826,45 +1381,124 @@ class MainWindow(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        export_hotels_btn = QPushButton("Export Hotels CSV")
+        export_hotels_btn = QPushButton("Export Full Hotels CSV")
         export_contacts_btn = QPushButton("Export Confirmed Contacts CSV")
-        export_leads_btn = QPushButton("Export Contact Leads CSV")
+        export_possible_btn = QPushButton("Export Possible Contacts CSV")
+        export_combined_btn = QPushButton("Export Combined Lead List CSV")
         open_exports_btn = QPushButton("Open Exports Folder")
 
-        export_hotels_btn.clicked.connect(self.export_hotels)
-        export_contacts_btn.clicked.connect(self.export_contacts)
-        export_leads_btn.clicked.connect(self.export_leads)
-        open_exports_btn.clicked.connect(lambda: webbrowser.open(str(Path("exports").resolve())))
+        export_hotels_btn.clicked.connect(self.export_full_hotels)
+        export_contacts_btn.clicked.connect(lambda: self.export_contacts_bucket("manager_contacts", "confirmed_contacts.csv"))
+        export_possible_btn.clicked.connect(lambda: self.export_contacts_bucket("contact_leads", "possible_contacts.csv"))
+        export_combined_btn.clicked.connect(self.export_combined_leads)
+        open_exports_btn.clicked.connect(lambda: webbrowser.open(str(EXPORTS_DIR.resolve())))
 
+        layout.addWidget(QLabel("Exports use the currently opened search list."))
         layout.addWidget(export_hotels_btn)
         layout.addWidget(export_contacts_btn)
-        layout.addWidget(export_leads_btn)
+        layout.addWidget(export_possible_btn)
+        layout.addWidget(export_combined_btn)
         layout.addWidget(open_exports_btn)
         layout.addStretch()
 
-        self.tabs.addTab(tab, "Export")
+        self.add_responsive_tab(tab, "Export")
 
-    def export_hotels(self):
-        path = export_hotels_csv(self.hotels)
-        self.show_info(f"Exported hotels to:\n{path}")
+    def write_csv(self, path: Path, rows: list[dict]):
+        import csv
 
-    def export_contacts(self):
-        path = export_contacts_csv(self.hotels)
-        self.show_info(f"Exported contacts to:\n{path}")
+        path.parent.mkdir(parents=True, exist_ok=True)
 
-    def export_leads(self):
-        path = export_leads_csv(self.hotels)
-        self.show_info(f"Exported leads to:\n{path}")
+        if not rows:
+            path.write_text("", encoding="utf-8")
+            return
+
+        fieldnames = list(rows[0].keys())
+
+        with open(path, "w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def export_full_hotels(self):
+        rows = []
+
+        for hotel in self.hotels:
+            rows.append(
+                {
+                    "hotel_name": hotel.get("hotel_name"),
+                    "location": hotel.get("location"),
+                    "area": hotel.get("area"),
+                    "website": hotel.get("website") or hotel.get("source_url"),
+                    "phone": hotel.get("phone"),
+                    "email": hotel.get("email"),
+                    "hotel_type": hotel.get("hotel_type"),
+                    "chain_or_independent": hotel.get("chain_or_independent"),
+                    "rating": hotel.get("rating"),
+                    "review_summary": hotel.get("review_summary"),
+                    "room_types": json.dumps(hotel.get("room_types") or [], ensure_ascii=False),
+                    "room_pricing": json.dumps(hotel.get("room_pricing") or [], ensure_ascii=False),
+                    "facilities": json.dumps(hotel.get("facilities") or [], ensure_ascii=False),
+                    "source_url": hotel.get("source_url"),
+                    "status": hotel.get("review_status"),
+                    "confirmed_contacts": len(hotel.get("manager_contacts") or []),
+                    "possible_contacts": len(hotel.get("contact_leads") or []),
+                }
+            )
+
+        path = EXPORTS_DIR / "full_hotels.csv"
+        self.write_csv(path, rows)
+        self.show_info(f"Exported to:\n{path}")
+
+    def export_contacts_bucket(self, bucket: str, filename: str):
+        rows = get_contact_rows(self.hotels, bucket)
+        path = EXPORTS_DIR / filename
+        self.write_csv(path, rows)
+        self.show_info(f"Exported to:\n{path}")
+
+    def export_combined_leads(self):
+        rows = []
+
+        for hotel in self.hotels:
+            contacts = hotel.get("manager_contacts") or hotel.get("contact_leads") or []
+            best_contact = contacts[0] if contacts else {}
+
+            rows.append(
+                {
+                    "hotel_name": hotel.get("hotel_name"),
+                    "location": hotel.get("location") or hotel.get("area"),
+                    "website": hotel.get("website") or hotel.get("source_url"),
+                    "hotel_phone": hotel.get("phone"),
+                    "hotel_email": hotel.get("email"),
+                    "contact_name": best_contact.get("name"),
+                    "contact_role": best_contact.get("role") or best_contact.get("matched_role"),
+                    "contact_email": best_contact.get("email"),
+                    "linkedin_url": best_contact.get("linkedin_url"),
+                    "source_url": best_contact.get("source_url") or best_contact.get("url"),
+                    "confidence": best_contact.get("confidence"),
+                    "review_status": best_contact.get("review_status"),
+                }
+            )
+
+        path = EXPORTS_DIR / "combined_leads.csv"
+        self.write_csv(path, rows)
+        self.show_info(f"Exported to:\n{path}")
 
     # -----------------------------
-    # Refresh tables
+    # Refresh helpers
     # -----------------------------
 
-    def refresh_all_tables(self):
-        self.refresh_cache_table()
-        self.refresh_hotel_table()
-        self.refresh_contact_tables()
+    def refresh_all(self):
+        self.refresh_results_table()
+        self.refresh_selected_hotel_details()
+        self.refresh_contacts_tab()
+        self.refresh_lists_tab()
         self.refresh_purge_view()
+
+        if hasattr(self, "active_list_label"):
+            self.active_list_label.setText(str(self.cache_path))
+
+        if hasattr(self, "cache_path_label"):
+            self.cache_path_label.setText(str(self.cache_path))
 
     def fill_table(self, table: QTableWidget, rows: list[dict]):
         table.clear()
@@ -888,25 +1522,22 @@ class MainWindow(QMainWindow):
                 table.setItem(row_index, column_index, item)
 
         table.resizeColumnsToContents()
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
 
-    def refresh_cache_table(self):
-        rows = get_hotel_summary_rows(self.hotels)
-        self.fill_table(self.cache_table, rows)
+        header = table.horizontalHeader()
 
-    def refresh_hotel_table(self):
-        rows = get_hotel_summary_rows(self.hotels)
-        self.fill_table(self.hotel_table, rows)
+        if len(headers) <= 8:
+            header.setSectionResizeMode(QHeaderView.Stretch)
+        else:
+            header.setSectionResizeMode(QHeaderView.Interactive)
 
-    def refresh_contact_tables(self):
-        bucket = self.contact_bucket_box.currentData() if hasattr(self, "contact_bucket_box") else "manager_contacts"
-        rows = get_contact_rows(self.hotels, bucket)
-        self.fill_table(self.contact_table, rows)
+        table.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+        table.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 
     def refresh_purge_view(self):
-        purge_list = load_purge_list(self.purge_path)
+        if not hasattr(self, "purge_view"):
+            return
 
-        import json
+        purge_list = load_purge_list(self.purge_path)
         self.purge_view.setPlainText(json.dumps(purge_list, indent=4, ensure_ascii=False))
 
     # -----------------------------
@@ -914,14 +1545,19 @@ class MainWindow(QMainWindow):
     # -----------------------------
 
     def start_pipeline_task(self, task_name: str):
-        self.save_current_setup()
+        self.save_current_setup(show_popup=False)
 
         settings = self.get_current_settings_from_ui()
         roles = self.get_roles_from_ui()
 
         if not roles:
-            self.show_error("Add at least one target role.")
+            self.show_error("Add at least one target role in Advanced > Contact Role Profiles.")
             return
+
+        if task_name in {"full", "discovery"}:
+            self.cache_path = self.make_named_search_path()
+            set_active_cache_path(self.cache_path)
+            self.active_list_label.setText(str(self.cache_path))
 
         self.worker_thread = QThread()
         self.worker = PipelineWorker(
@@ -951,9 +1587,9 @@ class MainWindow(QMainWindow):
     def pipeline_finished(self, hotels: list[dict]):
         self.hotels = hotels
         save_cache(self.hotels, self.cache_path)
-        self.refresh_all_tables()
+        self.refresh_all()
 
-        self.append_log("Pipeline finished and cache saved.")
+        self.append_log("Pipeline finished and search list saved.")
         print_hotel_summary(self.hotels)
 
     def pipeline_failed(self, error_text: str):
@@ -965,7 +1601,7 @@ def main():
     app = QApplication(sys.argv)
 
     window = MainWindow()
-    window.show()
+    window.showMaximized()
 
     sys.exit(app.exec())
 

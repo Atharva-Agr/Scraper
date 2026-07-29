@@ -11,6 +11,9 @@ from config import (
     nearby_area_terms,
     excluded_location_terms,
     contact_roles,
+    secondary_contact_roles,
+    ignored_contact_roles,
+    all_contact_roles,
     max_contact_search_results,
     max_contact_pages_per_hotel,
     graph_config,
@@ -62,9 +65,6 @@ GENERIC_HOTEL_WORDS = {
     "suite",
     "resort",
     "resorts",
-    "plaza",
-    "palace",
-    "hospitality",
 }
 
 
@@ -210,7 +210,7 @@ def build_manager_search_queries(hotel: dict) -> List[str]:
 
     queries = []
 
-    for role in contact_roles:
+    for role in get_contact_search_roles():
         # LinkedIn person profiles.
         queries.append(
             f'site:linkedin.com/in "{hotel_name}" "{role}"'
@@ -315,44 +315,90 @@ def classify_contact_source(url: str, title: str, body: str) -> str:
     return "unknown"
 
 
-ROLE_TIERS = {
-    "tier_1": [
-    "general manager",
-    "area general manager",
-    "regional general manager",
-    "hotel manager",
-    "owner",
-    "director of operations",
-    "vice president",
-    "vp",
-    ],
-    "tier_2": [
-        "operations manager",
-        "hotel operations manager",
-        "housekeeping manager",
-        "procurement manager",
-        "purchase manager",
-        "front office manager",
-        "director of engineering",
-        "engineering director",
-        "facilities manager",
-    ],
-    "tier_3": [
-        "sales manager",
-        "hr manager",
-        "human resources",
-        "guest relations manager",
-        "assistant manager",
-        "it manager",
-    ],
-}
+DEFAULT_WEAK_CONTACT_ROLES = [
+    "assistant manager",
+    "it manager",
+    "finance manager",
+]
+
+
+def clean_role_list(values: List[str]) -> List[str]:
+    clean_roles = []
+    seen = set()
+
+    for value in values or []:
+        text = normalize_text(value)
+
+        if not text:
+            continue
+
+        if text in seen:
+            continue
+
+        seen.add(text)
+        clean_roles.append(text)
+
+    return clean_roles
+
+
+def get_active_role_tiers() -> dict:
+    target = clean_role_list(contact_roles)
+    secondary = clean_role_list(secondary_contact_roles)
+    ignored = set(clean_role_list(ignored_contact_roles))
+
+    # Never treat ignored roles as target/secondary, even if a saved profile
+    # accidentally puts the same role in two buckets.
+    target = [role for role in target if role not in ignored]
+    secondary = [role for role in secondary if role not in ignored and role not in target]
+
+    return {
+        "tier_1": target,
+        "tier_2": secondary,
+        "tier_3": [
+            role
+            for role in clean_role_list(DEFAULT_WEAK_CONTACT_ROLES)
+            if role not in ignored and role not in target and role not in secondary
+        ],
+    }
+
+
+def get_contact_search_roles() -> List[str]:
+    roles = clean_role_list(all_contact_roles or (list(contact_roles) + list(secondary_contact_roles)))
+    ignored = set(clean_role_list(ignored_contact_roles))
+
+    return [role for role in roles if role not in ignored]
+
+
+def find_ignored_role(text: str) -> str | None:
+    text = normalize_text(text)
+    padded_text = f" {text} "
+
+    for role in clean_role_list(ignored_contact_roles):
+        clean_role = normalize_text(role)
+
+        if f" {clean_role} " in padded_text:
+            return role
+
+    return None
+
+
+def is_secondary_contact_role(role: Optional[str]) -> bool:
+    if not role:
+        return False
+
+    clean_role = normalize_text(role)
+
+    return any(
+        clean_role == normalize_text(secondary_role)
+        for secondary_role in secondary_contact_roles
+    )
 
 
 def find_target_role(text: str) -> str | None:
     text = normalize_text(text)
     padded_text = f" {text} "
 
-    for roles in ROLE_TIERS.values():
+    for roles in get_active_role_tiers().values():
         for role in roles:
             clean_role = normalize_text(role)
 
@@ -367,7 +413,7 @@ def get_role_tier(role: str | None) -> str | None:
 
     clean_role = normalize_text(role)
 
-    for tier_name, roles in ROLE_TIERS.items():
+    for tier_name, roles in get_active_role_tiers().items():
         for tier_role in roles:
             if normalize_text(tier_role) == clean_role:
                 return tier_name
@@ -659,6 +705,13 @@ def score_contact_result(
 
     candidate["primary_title_hotel_match"] = primary_title_hotel_match
     matched_role = title_role or body_role
+    ignored_role = find_ignored_role(f"{primary_title} {title}")
+
+    candidate["ignored_role"] = ignored_role
+
+    if ignored_role:
+        score -= 50
+        reasons.append(f"Ignored role matched: {ignored_role}")
 
     candidate["title_role"] = title_role
     candidate["body_role"] = body_role
@@ -933,6 +986,9 @@ Target hotel location:
 Target roles:
 {contact_roles}
 
+Secondary roles to keep as possible leads:
+{secondary_contact_roles}
+
 Extract:
 - name
 - role
@@ -1142,11 +1198,25 @@ def scrape_contacts_from_candidates(hotel: dict, candidates: List[dict]) -> List
     return contacts
 
 def get_contact_leads(candidates: List[dict]) -> List[dict]:
-    return [
-        candidate
-        for candidate in candidates
-        if candidate.get("confidence") in ["weak_lead", "medium"]
-    ]
+    leads = []
+
+    for candidate in candidates:
+        if candidate.get("purge_blocked"):
+            continue
+
+        if candidate.get("ignored_role"):
+            continue
+
+        role = candidate.get("matched_role") or candidate.get("title_role") or candidate.get("body_role")
+
+        if is_secondary_contact_role(role):
+            leads.append(candidate)
+            continue
+
+        if candidate.get("confidence") in ["weak_lead", "medium"]:
+            leads.append(candidate)
+
+    return leads
 
 def enrich_hotel_with_contacts(hotel: dict) -> dict:
     print(f"\n================ Contact enrichment for: {hotel.get('hotel_name')} ================")

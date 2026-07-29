@@ -25,42 +25,84 @@ PURGE_LIST_FILE = DATA_DIR / "purge_list.json"
 
 CONTACT_ROLES = [
     "general manager",
+    "hotel manager",
+    "resident manager",
+    "operations manager",
+    "director of operations",
+    "rooms division manager",
+    "director of rooms",
+    "executive housekeeper",
+    "housekeeping manager",
+    "procurement manager",
+    "purchasing manager",
+    "purchase manager",
+    "director of procurement",
+]
+
+SECONDARY_CONTACT_ROLES = [
+    "owner",
+    "managing director",
+    "cluster general manager",
+    "area general manager",
+    "regional general manager",
+    "director of sales",
+    "director of sales and marketing",
+    "sales manager",
+    "events manager",
+    "event manager",
+    "banquet manager",
+    "catering sales manager",
+    "director of food and beverage",
+    "food and beverage manager",
+    "front office manager",
+    "facilities manager",
+    "engineering manager",
+    "director of engineering",
+    "finance manager",
+]
+
+IGNORED_CONTACT_ROLES = [
+    "chef",
+    "executive chef",
+    "sous chef",
+    "pastry chef",
+    "human resources",
+    "director of human resources",
+    "hr manager",
+    "talent acquisition",
+    "recruiter",
+    "front desk agent",
+    "receptionist",
+    "guest service executive",
+    "guest relations executive",
+    "concierge",
+    "security manager",
+    "spa manager",
+    "marketing executive",
+    "sales executive",
+    "reservations agent",
+    "reservation agent",
+    "intern",
+    "trainee",
 ]
 
 
 # -----------------------------
-# Testing defaults
+# Default search settings
 # -----------------------------
 
 TESTING_SETTINGS = {
-    "location": "Delhi",
-    "area": "Aerocity",
-    "hotel_type": "business hotels",
-    "extra_info": "Prefer hotels with banquet halls or conference facilities.",
-
-    "nearby_area_terms": [
-        "Mahipalpur",
-        "Rangpuri",
-        "IGI",
-        "airport",
-        "hospitality district",
-    ],
-
-    "excluded_location_terms": [
-        "Noida",
-        "Gurgaon",
-        "Gurugram",
-        "Ghaziabad",
-        "Faridabad",
-    ],
-
+    "location": "",
+    "area": "",
+    "hotel_type": "Business hotel",
+    "extra_info": "",
+    "nearby_area_terms": [],
+    "excluded_location_terms": [],
     "max_search_results": 10,
     "max_pages_to_try": 8,
     "target_hotels": 3,
-
     "max_contact_search_results": 4,
     "max_contact_pages_per_hotel": 2,
-
     "RUN_PHASE_1": True,
     "RUN_PHASE_2": True,
     "USE_CACHED_HOTELS": False,
@@ -89,6 +131,9 @@ max_contact_search_results = settings["max_contact_search_results"]
 max_contact_pages_per_hotel = settings["max_contact_pages_per_hotel"]
 
 contact_roles = list(CONTACT_ROLES)
+secondary_contact_roles = list(SECONDARY_CONTACT_ROLES)
+ignored_contact_roles = list(IGNORED_CONTACT_ROLES)
+all_contact_roles = list(CONTACT_ROLES) + list(SECONDARY_CONTACT_ROLES)
 
 RUN_PHASE_1 = settings["RUN_PHASE_1"]
 RUN_PHASE_2 = settings["RUN_PHASE_2"]
@@ -117,7 +162,8 @@ graph_config = {
 
 def ask_text(prompt: str, default: str = "", required: bool = False) -> str:
     while True:
-        answer = input(f"{prompt} [{default}]: ").strip()
+        suffix = f" [{default}]" if default else ""
+        answer = input(f"{prompt}{suffix}: ").strip()
         value = answer or default
 
         if value:
@@ -217,36 +263,28 @@ def get_testing_settings() -> dict:
 def get_custom_settings() -> dict:
     print("\nCustom search setup")
     print("-------------------")
-    print("Press Enter to use the recommended default shown in brackets.\n")
+    print("Enter the location details for this run. No city or area is preselected.\n")
 
     return {
-        "location": ask_text("Location / city", "Delhi", required=True),
-        "area": ask_text("Area / neighborhood", "Aerocity"),
-        "hotel_type": ask_text("Hotel type", "business hotels"),
-        "extra_info": ask_text(
-            "Extra info",
-            "Prefer hotels with banquet halls or conference facilities.",
-        ),
-
+        "location": ask_text("Location / city", "", required=True),
+        "area": ask_text("Area / neighborhood", ""),
+        "hotel_type": ask_text("Hotel type", "Business hotel"),
+        "extra_info": ask_text("Extra info", ""),
         "nearby_area_terms": ask_list(
             "Nearby area terms help match hotels close to the target area.",
-            ["airport", "hospitality district"],
-            "Mahipalpur, Rangpuri, IGI, airport",
+            [],
+            "nearby district 1, nearby district 2, nearby landmark",
         ),
-
         "excluded_location_terms": ask_list(
             "Excluded location terms help avoid nearby but wrong locations.",
             [],
-            "Noida, Gurgaon, Ghaziabad",
+            "wrong area 1, wrong area 2, neighbouring city to exclude",
         ),
-
         "max_search_results": ask_int("Search results per query", 10),
         "max_pages_to_try": ask_int("Max hotel pages to try", 8),
         "target_hotels": ask_int("Target valid hotels to accept", 3),
-
         "max_contact_search_results": ask_int("Contact search results per query", 4),
         "max_contact_pages_per_hotel": ask_int("Contact pages to scrape per hotel", 2),
-
         "RUN_PHASE_1": True,
         "RUN_PHASE_2": True,
         "USE_CACHED_HOTELS": False,
@@ -286,7 +324,9 @@ def print_settings_summary(runtime_settings: dict) -> None:
     print(f"Area: {runtime_settings['area']}")
     print(f"Hotel type: {runtime_settings['hotel_type']}")
     print(f"Extra info: {runtime_settings['extra_info']}")
-    print(f"Contact roles: {', '.join(CONTACT_ROLES)}")
+    print(f"Target roles: {', '.join(CONTACT_ROLES)}")
+    print(f"Secondary roles: {', '.join(SECONDARY_CONTACT_ROLES)}")
+    print(f"Ignored roles: {', '.join(IGNORED_CONTACT_ROLES)}")
     print(f"Run Phase 1: {runtime_settings['RUN_PHASE_1']}")
     print(f"Run Phase 2: {runtime_settings['RUN_PHASE_2']}")
     print(f"Use cached hotels: {runtime_settings['USE_CACHED_HOTELS']}")
@@ -311,6 +351,9 @@ def apply_settings_to_globals(runtime_settings: dict) -> None:
     global max_contact_search_results
     global max_contact_pages_per_hotel
     global contact_roles
+    global secondary_contact_roles
+    global ignored_contact_roles
+    global all_contact_roles
     global RUN_PHASE_1
     global RUN_PHASE_2
     global USE_CACHED_HOTELS
@@ -322,8 +365,8 @@ def apply_settings_to_globals(runtime_settings: dict) -> None:
     hotel_type = settings["hotel_type"]
     extra_info = settings["extra_info"]
 
-    nearby_area_terms = settings["nearby_area_terms"]
-    excluded_location_terms = settings["excluded_location_terms"]
+    nearby_area_terms = settings.get("nearby_area_terms") or []
+    excluded_location_terms = settings.get("excluded_location_terms") or []
 
     max_search_results = settings["max_search_results"]
     max_pages_to_try = settings["max_pages_to_try"]
@@ -332,7 +375,10 @@ def apply_settings_to_globals(runtime_settings: dict) -> None:
     max_contact_search_results = settings["max_contact_search_results"]
     max_contact_pages_per_hotel = settings["max_contact_pages_per_hotel"]
 
-    contact_roles = list(CONTACT_ROLES)
+    contact_roles = list(settings.get("contact_roles") or CONTACT_ROLES)
+    secondary_contact_roles = list(settings.get("secondary_contact_roles") or SECONDARY_CONTACT_ROLES)
+    ignored_contact_roles = list(settings.get("ignored_contact_roles") or IGNORED_CONTACT_ROLES)
+    all_contact_roles = list(contact_roles) + list(secondary_contact_roles)
 
     RUN_PHASE_1 = settings["RUN_PHASE_1"]
     RUN_PHASE_2 = settings["RUN_PHASE_2"]
@@ -340,7 +386,7 @@ def apply_settings_to_globals(runtime_settings: dict) -> None:
 
 
 def configure_from_cli() -> dict:
-    use_testing_settings = ask_bool("Use testing settings?", default=True)
+    use_testing_settings = ask_bool("Use blank default settings?", default=True)
 
     if use_testing_settings:
         runtime_settings = get_testing_settings()
