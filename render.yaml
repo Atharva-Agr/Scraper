@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: linengrass
+    env: python
+    buildCommand: pip install -r requirements_hosting.txt && python -m playwright install chromium
+    startCommand: streamlit run streamlit_app.py --server.address 0.0.0.0 --server.port $PORT

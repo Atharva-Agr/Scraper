@@ -1,0 +1,6 @@
+streamlit
+pydantic
+python-dotenv
+ddgs
+scrapegraphai
+playwright
