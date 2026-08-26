@@ -1,1 +1,1 @@
-Ignore V1 just run main
+Ignore Old, for quick set up just use the LinenGrass Scraper Zip 
