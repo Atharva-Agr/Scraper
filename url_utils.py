@@ -1,5 +1,5 @@
 from urllib.parse import urlparse
-from config import area, location, nearby_area_terms
+from config import area, location
 import re
 
 BAD_DOMAINS = [
@@ -200,9 +200,8 @@ def score_url(url: str) -> int:
         score += 10
 
     location_terms = [
-        area.lower(),
-        location.lower(),
-        *[str(term or "").lower() for term in nearby_area_terms],
+        str(area or "").lower(),
+        str(location or "").lower(),
     ]
 
     for term in location_terms:

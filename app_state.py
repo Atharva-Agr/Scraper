@@ -32,7 +32,6 @@ DEFAULT_SEARCH_SETTINGS = {
 }
 
 
-
 DEFAULT_APP_SETTINGS = {
     "active_cache_file": str(DEFAULT_CACHE_FILE),
     "active_purge_file": str(DEFAULT_PURGE_FILE),

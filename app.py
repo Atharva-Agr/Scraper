@@ -26,8 +26,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
-    QScrollArea,
-    QSizePolicy,
     QSpinBox,
     QSplitter,
     QTableWidget,
@@ -167,8 +165,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("LinenGrass Lead Manager")
-        self.fit_to_screen()
+        self.setWindowTitle("LinenGrass Scraper")
+        self.resize(1450, 850)
 
         SEARCH_LISTS_DIR.mkdir(parents=True, exist_ok=True)
         EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -186,20 +184,6 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        self.setStyleSheet("""
-            QGroupBox { font-weight: 600; margin-top: 8px; }
-            QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }
-            QLineEdit, QComboBox, QSpinBox { min-height: 26px; }
-            QPushButton { min-height: 28px; padding-left: 10px; padding-right: 10px; }
-            QTextEdit { min-height: 160px; }
-            QLabel#searchPreview {
-                padding: 8px;
-                border: 1px solid #b8b8b8;
-                border-radius: 6px;
-                font-weight: 500;
-            }
-        """)
-
         self.build_search_tab()
         self.build_results_tab()
         self.build_contacts_tab()
@@ -212,36 +196,6 @@ class MainWindow(QMainWindow):
     # -----------------------------
     # Helpers
     # -----------------------------
-
-    def fit_to_screen(self):
-        screen = QApplication.primaryScreen()
-
-        if not screen:
-            self.resize(1200, 800)
-            return
-
-        available = screen.availableGeometry()
-        width = max(900, available.width())
-        height = max(650, available.height())
-
-        self.setGeometry(available.x(), available.y(), width, height)
-        self.setMinimumSize(min(900, width), min(600, height))
-
-    def add_responsive_tab(self, content: QWidget, title: str):
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(content)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-
-        self.tabs.addTab(scroll_area, title)
-
-    def make_wrapped_label(self, text: str = "") -> QLabel:
-        label = QLabel(text)
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        return label
 
     def show_info(self, message: str):
         QMessageBox.information(self, "LinenGrass", message)
@@ -295,39 +249,6 @@ class MainWindow(QMainWindow):
 
         return selected
 
-    def update_hotel_type_visibility(self, selected_text: str | None = None):
-        if selected_text is None:
-            selected_text = self.hotel_type_dropdown.currentText()
-
-        is_custom = selected_text == "Custom"
-        self.custom_hotel_type_input.setVisible(is_custom)
-
-        if hasattr(self, "custom_hotel_type_label"):
-            self.custom_hotel_type_label.setVisible(is_custom)
-
-        if is_custom:
-            self.custom_hotel_type_input.setFocus()
-
-        self.update_search_preview()
-
-    def update_search_preview(self):
-        if not hasattr(self, "search_preview_label"):
-            return
-
-        mode = "Complete search" if self.complete_search_checkbox.isChecked() else "Partial search"
-        hotel_type = self.get_hotel_type_from_ui()
-        area = self.area_input.text().strip() or "selected area"
-        location = self.location_input.text().strip() or "selected city"
-
-        if self.complete_search_checkbox.isChecked():
-            detail = "The app will search broadly and estimate coverage from discovered hotel sources."
-        else:
-            detail = f"The app will aim for about {self.target_hotels_input.value()} hotels."
-
-        self.search_preview_label.setText(
-            f"{mode}: {hotel_type} in {area}, {location}. {detail}"
-        )
-
     def get_current_settings_from_ui(self) -> dict:
         complete_search = self.complete_search_checkbox.isChecked()
 
@@ -345,9 +266,6 @@ class MainWindow(QMainWindow):
             "target_hotels": self.target_hotels_input.value(),
             "max_contact_search_results": self.contact_results_input.value(),
             "max_contact_pages_per_hotel": self.contact_pages_input.value(),
-            "target_roles": self.get_roles_from_ui() if hasattr(self, "target_roles_list") else [],
-            "secondary_roles": self.get_secondary_roles_from_ui() if hasattr(self, "secondary_roles_list") else [],
-            "ignored_roles": self.get_ignored_roles_from_ui() if hasattr(self, "ignored_roles_list") else [],
         }
 
         if complete_search:
@@ -359,25 +277,16 @@ class MainWindow(QMainWindow):
 
         return settings
 
-    def get_list_widget_values(self, list_widget: QListWidget) -> list[str]:
-        values = []
+    def get_roles_from_ui(self) -> list[str]:
+        roles = []
 
-        for index in range(list_widget.count()):
-            text = list_widget.item(index).text().strip()
+        for index in range(self.target_roles_list.count()):
+            text = self.target_roles_list.item(index).text().strip()
 
             if text:
-                values.append(text)
+                roles.append(text)
 
-        return values
-
-    def get_roles_from_ui(self) -> list[str]:
-        return self.get_list_widget_values(self.target_roles_list)
-
-    def get_secondary_roles_from_ui(self) -> list[str]:
-        return self.get_list_widget_values(self.secondary_roles_list)
-
-    def get_ignored_roles_from_ui(self) -> list[str]:
-        return self.get_list_widget_values(self.ignored_roles_list)
+        return roles
 
     def save_current_setup(self, show_popup: bool = True):
         search_settings = self.get_current_settings_from_ui()
@@ -385,9 +294,20 @@ class MainWindow(QMainWindow):
 
         profile_name = self.role_profile_name_input.text().strip() or "default"
 
-        target_roles = self.get_roles_from_ui()
-        secondary_roles = self.get_secondary_roles_from_ui()
-        ignored_roles = self.get_ignored_roles_from_ui()
+        target_roles = [
+            self.target_roles_list.item(index).text()
+            for index in range(self.target_roles_list.count())
+        ]
+
+        secondary_roles = [
+            self.secondary_roles_list.item(index).text()
+            for index in range(self.secondary_roles_list.count())
+        ]
+
+        ignored_roles = [
+            self.ignored_roles_list.item(index).text()
+            for index in range(self.ignored_roles_list.count())
+        ]
 
         save_role_profile(profile_name, target_roles, secondary_roles, ignored_roles)
         set_active_role_profile(profile_name)
@@ -451,7 +371,7 @@ class MainWindow(QMainWindow):
         search_settings = get_search_settings(self.settings)
 
         self.search_name_input = QLineEdit()
-        self.search_name_input.setPlaceholderText("Example: Area + hotel type search")
+        self.search_name_input.setPlaceholderText("Example: Downtown business hotels")
 
         self.location_input = QLineEdit(search_settings["location"])
         self.area_input = QLineEdit(search_settings["area"])
@@ -464,17 +384,16 @@ class MainWindow(QMainWindow):
         if matched_index >= 0:
             self.hotel_type_dropdown.setCurrentIndex(matched_index)
         else:
-            custom_index = self.hotel_type_dropdown.findText("Custom", Qt.MatchFixedString)
-            self.hotel_type_dropdown.setCurrentIndex(custom_index)
+            self.hotel_type_dropdown.setCurrentText("Custom")
 
-        self.custom_hotel_type_label = QLabel("Custom hotel type")
         self.custom_hotel_type_input = QLineEdit(default_hotel_type)
-        self.custom_hotel_type_input.setPlaceholderText("Example: serviced apartment hotel")
-        self.hotel_type_dropdown.currentTextChanged.connect(self.update_hotel_type_visibility)
-        self.custom_hotel_type_input.textChanged.connect(self.update_search_preview)
+        self.custom_hotel_type_input.setPlaceholderText("Enter custom hotel type")
+        self.custom_hotel_type_input.setVisible(self.hotel_type_dropdown.currentText() == "Custom")
+        self.hotel_type_dropdown.currentTextChanged.connect(
+            lambda text: self.custom_hotel_type_input.setVisible(text == "Custom")
+        )
 
         self.extra_info_input = QLineEdit(search_settings["extra_info"])
-        self.extra_info_input.setPlaceholderText("Example: banquet halls, conference rooms, corporate events")
 
         self.complete_search_checkbox = QCheckBox("Complete search")
         self.complete_search_checkbox.setToolTip(
@@ -485,9 +404,6 @@ class MainWindow(QMainWindow):
         self.contact_results_input = QSpinBox()
         self.contact_results_input.setRange(1, 50)
         self.contact_results_input.setValue(search_settings["max_contact_search_results"])
-        self.contact_results_input.setToolTip(
-            "How many contact-search results to check per hotel. Higher is slower but can find more leads."
-        )
 
         self.partial_search_box = QGroupBox("Partial search size")
         partial_form = QFormLayout(self.partial_search_box)
@@ -495,43 +411,17 @@ class MainWindow(QMainWindow):
         self.target_hotels_input = QSpinBox()
         self.target_hotels_input.setRange(1, 100)
         self.target_hotels_input.setValue(search_settings["target_hotels"])
-        self.target_hotels_input.valueChanged.connect(self.update_search_preview)
-
-        partial_hint = QLabel(
-            "Use partial search for quick tests or focused lead lists. "
-            "Use complete search when you want broad area coverage."
-        )
-        partial_hint.setWordWrap(True)
 
         partial_form.addRow("Hotels to find", self.target_hotels_input)
-        partial_form.addRow("", partial_hint)
-
-        self.search_preview_label = QLabel()
-        self.search_preview_label.setWordWrap(True)
-        self.search_preview_label.setObjectName("searchPreview")
 
         form.addRow("Search list name", self.search_name_input)
         form.addRow("Location / City", self.location_input)
         form.addRow("Area / Neighbourhood", self.area_input)
         form.addRow("Hotel type", self.hotel_type_dropdown)
-        form.addRow(self.custom_hotel_type_label, self.custom_hotel_type_input)
+        form.addRow("Custom hotel type", self.custom_hotel_type_input)
         form.addRow("Extra requirements", self.extra_info_input)
         form.addRow("Search mode", self.complete_search_checkbox)
-        form.addRow("Contact search depth", self.contact_results_input)
-        form.addRow("Preview", self.search_preview_label)
-
-        for widget in [
-            self.search_name_input,
-            self.location_input,
-            self.area_input,
-            self.extra_info_input,
-        ]:
-            widget.textChanged.connect(self.update_search_preview)
-
-        self.complete_search_checkbox.stateChanged.connect(lambda _: self.update_search_preview())
-        self.contact_results_input.valueChanged.connect(self.update_search_preview)
-        self.update_hotel_type_visibility()
-        self.update_complete_search_visibility()
+        form.addRow("Contacts to search per hotel", self.contact_results_input)
 
         left.addWidget(search_box)
         left.addWidget(self.partial_search_box)
@@ -561,11 +451,10 @@ class MainWindow(QMainWindow):
         layout.addLayout(left, 1)
         layout.addLayout(right, 2)
 
-        self.add_responsive_tab(tab, "Search")
+        self.tabs.addTab(tab, "Search")
 
     def update_complete_search_visibility(self):
         self.partial_search_box.setVisible(not self.complete_search_checkbox.isChecked())
-        self.update_search_preview()
 
     # -----------------------------
     # Results tab
@@ -576,7 +465,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(tab)
 
         top_row = QHBoxLayout()
-        self.active_list_label = self.make_wrapped_label(str(self.cache_path))
+        self.active_list_label = QLabel(str(self.cache_path))
         self.results_advanced_checkbox = QCheckBox("Advanced result view")
         self.results_advanced_checkbox.stateChanged.connect(
             lambda state: self.set_advanced_result_view(state == Qt.Checked)
@@ -624,7 +513,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(splitter)
         layout.addLayout(button_row)
 
-        self.add_responsive_tab(tab, "Results")
+        self.tabs.addTab(tab, "Results")
 
     def get_basic_hotel_rows(self) -> list[dict]:
         rows = []
@@ -803,7 +692,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.contact_details_box)
         layout.addLayout(button_row)
 
-        self.add_responsive_tab(tab, "Contacts")
+        self.tabs.addTab(tab, "Contacts")
 
     def get_all_contacts_for_hotel(self, hotel: dict) -> list[dict]:
         contacts = []
@@ -978,7 +867,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.lists_widget)
         layout.addLayout(button_row)
 
-        self.add_responsive_tab(tab, "Lists")
+        self.tabs.addTab(tab, "Lists")
 
     def refresh_lists_tab(self):
         self.lists_widget.clear()
@@ -1113,29 +1002,26 @@ class MainWindow(QMainWindow):
         add_secondary_btn = QPushButton("Add Secondary")
         add_ignored_btn = QPushButton("Add Ignored")
         remove_role_btn = QPushButton("Remove Selected")
-        load_final_roles_btn = QPushButton("Load Final Hotel Roles")
         save_setup_btn = QPushButton("Save Settings")
 
         add_target_btn.clicked.connect(lambda: self.add_role_to_list(self.target_roles_list))
         add_secondary_btn.clicked.connect(lambda: self.add_role_to_list(self.secondary_roles_list))
         add_ignored_btn.clicked.connect(lambda: self.add_role_to_list(self.ignored_roles_list))
         remove_role_btn.clicked.connect(self.remove_selected_role)
-        load_final_roles_btn.clicked.connect(self.load_final_hotel_roles_to_ui)
         save_setup_btn.clicked.connect(self.save_current_setup)
 
         role_buttons.addWidget(add_target_btn)
         role_buttons.addWidget(add_secondary_btn)
         role_buttons.addWidget(add_ignored_btn)
         role_buttons.addWidget(remove_role_btn)
-        role_buttons.addWidget(load_final_roles_btn)
 
         role_layout.addWidget(QLabel("Profile name"))
         role_layout.addWidget(self.role_profile_name_input)
-        role_layout.addWidget(QLabel("Target roles — final confirmed contacts"))
+        role_layout.addWidget(QLabel("Target roles"))
         role_layout.addWidget(self.target_roles_list)
-        role_layout.addWidget(QLabel("Secondary roles — possible leads"))
+        role_layout.addWidget(QLabel("Secondary roles"))
         role_layout.addWidget(self.secondary_roles_list)
-        role_layout.addWidget(QLabel("Ignored roles — downrank/reject"))
+        role_layout.addWidget(QLabel("Ignored roles"))
         role_layout.addWidget(self.ignored_roles_list)
         role_layout.addWidget(self.new_role_input)
         role_layout.addLayout(role_buttons)
@@ -1147,7 +1033,7 @@ class MainWindow(QMainWindow):
         cache_box = QGroupBox("Cache / List Controls")
         cache_layout = QVBoxLayout(cache_box)
 
-        self.cache_path_label = self.make_wrapped_label(str(self.cache_path))
+        self.cache_path_label = QLabel(str(self.cache_path))
 
         open_cache_btn = QPushButton("Open Cache/List")
         save_cache_btn = QPushButton("Save Current List")
@@ -1167,7 +1053,7 @@ class MainWindow(QMainWindow):
         purge_layout = QVBoxLayout(purge_box)
         purge_form = QFormLayout()
 
-        self.purge_path_label = self.make_wrapped_label(str(self.purge_path))
+        self.purge_path_label = QLabel(str(self.purge_path))
         self.purge_type_box = QComboBox()
         self.purge_type_box.addItems([
             "Hard URL",
@@ -1210,35 +1096,7 @@ class MainWindow(QMainWindow):
         layout.addLayout(left, 1)
         layout.addLayout(right, 1)
 
-        self.add_responsive_tab(tab, "Advanced")
-
-    def replace_role_list(self, list_widget: QListWidget, roles: list[str]):
-        list_widget.clear()
-
-        for role in roles:
-            text = str(role or "").strip()
-
-            if text:
-                list_widget.addItem(text)
-
-    def load_final_hotel_roles_to_ui(self):
-        profile = DEFAULT_ROLE_PROFILES["default"]
-
-        self.replace_role_list(
-            self.target_roles_list,
-            profile.get("target_roles", []),
-        )
-        self.replace_role_list(
-            self.secondary_roles_list,
-            profile.get("secondary_roles", []),
-        )
-        self.replace_role_list(
-            self.ignored_roles_list,
-            profile.get("ignored_roles", []),
-        )
-
-        self.role_profile_name_input.setText("default")
-        self.show_info("Final hotel contact roles loaded. Click Save Settings / Role Profile to keep them.")
+        self.tabs.addTab(tab, "Advanced")
 
     def add_role_to_list(self, list_widget: QListWidget):
         role = self.new_role_input.text().strip()
@@ -1401,7 +1259,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(open_exports_btn)
         layout.addStretch()
 
-        self.add_responsive_tab(tab, "Export")
+        self.tabs.addTab(tab, "Export")
 
     def write_csv(self, path: Path, rows: list[dict]):
         import csv
@@ -1522,16 +1380,7 @@ class MainWindow(QMainWindow):
                 table.setItem(row_index, column_index, item)
 
         table.resizeColumnsToContents()
-
-        header = table.horizontalHeader()
-
-        if len(headers) <= 8:
-            header.setSectionResizeMode(QHeaderView.Stretch)
-        else:
-            header.setSectionResizeMode(QHeaderView.Interactive)
-
-        table.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
-        table.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
 
     def refresh_purge_view(self):
         if not hasattr(self, "purge_view"):
@@ -1601,7 +1450,7 @@ def main():
     app = QApplication(sys.argv)
 
     window = MainWindow()
-    window.showMaximized()
+    window.show()
 
     sys.exit(app.exec())
 

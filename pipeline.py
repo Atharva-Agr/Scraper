@@ -12,9 +12,7 @@ from pydantic import BaseModel
 
 from app_state import (
     get_active_cache_path,
-    get_active_ignored_roles,
     get_active_purge_path,
-    get_active_secondary_roles,
     get_active_target_roles,
     get_search_settings,
     load_app_settings,
@@ -64,36 +62,39 @@ def parse_csv_text(value: str) -> list[str]:
 
 
 
-def estimate_hotel_count_from_urls(candidate_urls: list[str], url_utils_module) -> int:
+def estimate_hotel_count(settings: dict, grouped_urls: dict | None = None) -> int:
     """
-    Estimate the complete-search target from the actual URLs discovered.
+    Estimate a practical complete-search target from discovered source coverage.
 
-    This avoids hardcoded city/area assumptions. The estimate is based on how
-    many unique hotel-looking sources the current search found, plus a small
-    buffer because some pages will fail validation or scraping.
+    This does not use hardcoded city/location assumptions. If discovery has already
+    run, the target is based on unique candidate URLs and their source diversity.
     """
-    scored_urls = []
+    if grouped_urls:
+        unique_urls = set()
+        non_empty_groups = 0
 
-    for url in candidate_urls:
-        try:
-            score = url_utils_module.score_url(url)
-        except Exception:
-            score = 0
+        for urls in grouped_urls.values():
+            clean_urls = [url for url in (urls or []) if url]
 
-        if score >= 25:
-            scored_urls.append((url, score))
+            if clean_urls:
+                non_empty_groups += 1
 
-    useful_count = len(scored_urls)
-    high_confidence_count = sum(1 for _, score in scored_urls if score >= 75)
+            unique_urls.update(clean_urls)
 
-    if useful_count == 0:
-        return 15
+        discovered_count = len(unique_urls)
 
-    buffer = max(5, useful_count // 4)
-    confidence_bonus = min(high_confidence_count // 3, 10)
+        if discovered_count <= 0:
+            return int(settings.get("target_hotels") or 10)
 
-    return min(max(useful_count + buffer + confidence_bonus, 15), 150)
+        # URLs are not the same as valid hotels because some pages fail, duplicate,
+        # or belong to directories. This gives enough room without blindly scraping
+        # every weak result.
+        coverage_multiplier = 1.0 + min(non_empty_groups, 5) * 0.10
+        estimate = int(discovered_count * coverage_multiplier)
 
+        return min(max(estimate, discovered_count), 150)
+
+    return int(settings.get("target_hotels") or 10)
 
 def make_fallback_hotel_from_url(url: str, settings: dict, source_type: str = "unknown") -> dict:
     parsed = urlparse(str(url or ""))
@@ -194,32 +195,15 @@ def apply_runtime_settings(
 ) -> dict:
     settings = normalize_settings(settings)
 
-    app_settings = load_app_settings()
-    role_profiles = load_role_profiles()
-
     if target_roles is None:
-        target_roles = settings.get("target_roles") or get_active_target_roles(
-            app_settings,
-            role_profiles,
-        )
-
-    secondary_roles = settings.get("secondary_roles") or get_active_secondary_roles(
-        app_settings,
-        role_profiles,
-    )
-    ignored_roles = settings.get("ignored_roles") or get_active_ignored_roles(
-        app_settings,
-        role_profiles,
-    )
+        app_settings = load_app_settings()
+        role_profiles = load_role_profiles()
+        target_roles = get_active_target_roles(app_settings, role_profiles)
 
     target_roles = clean_string_list(target_roles)
-    secondary_roles = clean_string_list(secondary_roles)
-    ignored_roles = clean_string_list(ignored_roles)
 
     if not target_roles:
         target_roles = ["general manager"]
-
-    all_contact_roles = clean_string_list(target_roles + secondary_roles)
 
     modules = get_backend_modules()
 
@@ -236,9 +220,6 @@ def apply_runtime_settings(
         "max_contact_search_results": settings["max_contact_search_results"],
         "max_contact_pages_per_hotel": settings["max_contact_pages_per_hotel"],
         "contact_roles": target_roles,
-        "secondary_contact_roles": secondary_roles,
-        "ignored_contact_roles": ignored_roles,
-        "all_contact_roles": all_contact_roles,
     }
 
     for module in modules.values():
@@ -474,8 +455,9 @@ def run_hotel_discovery(
     settings = normalize_settings(settings)
 
     if settings.get("complete_search"):
-        # Complete search should be wider, but the final target is estimated
-        # after real candidate URLs are discovered. No city/area assumptions.
+        # Use broader limits before discovery, but avoid any hardcoded location logic.
+        settings["target_hotels"] = max(int(settings.get("target_hotels") or 0), 25)
+        settings["max_pages_to_try"] = max(int(settings.get("max_pages_to_try") or 0), 80)
         settings["max_search_results"] = max(int(settings.get("max_search_results") or 0), 20)
 
     modules = apply_runtime_settings(settings, target_roles)
@@ -492,18 +474,18 @@ def run_hotel_discovery(
 
     grouped_urls = discovery.discover_candidate_urls()
 
+    if settings.get("complete_search"):
+        estimated_count = estimate_hotel_count(settings, grouped_urls)
+        settings["estimated_hotel_count"] = estimated_count
+        print(f"Complete search target from discovered sources: about {estimated_count} candidate hotel URLs")
+    else:
+        estimated_count = int(settings.get("target_hotels") or 0)
+
     candidate_urls = url_utils.select_balanced_urls(
         grouped_urls,
         complete_search=bool(settings.get("complete_search")),
-        target_count=settings.get("target_hotels"),
+        target_count=estimated_count,
     )
-
-    if settings.get("complete_search"):
-        estimated_count = estimate_hotel_count_from_urls(candidate_urls, url_utils)
-        settings["estimated_hotel_count"] = estimated_count
-        settings["target_hotels"] = max(int(settings.get("target_hotels") or 0), estimated_count)
-        settings["max_pages_to_try"] = max(int(settings.get("max_pages_to_try") or 0), estimated_count * 2)
-        print(f"Complete search estimate from discovered sources: about {estimated_count} hotels")
 
     clean_candidate_urls = []
 
@@ -608,12 +590,6 @@ def run_contact_enrichment(
         if status in {"rejected", "duplicate", "purged"}:
             enriched_hotels.append(hotel)
             continue
-
-        hotel["target_contact_count"] = int(
-            settings.get("target_contact_count")
-            or settings.get("contact_count")
-            or 1
-        )
 
         enriched_hotel = contacts.enrich_hotel_with_contacts(hotel)
         enriched_hotel = ensure_hotel_app_fields(enriched_hotel)

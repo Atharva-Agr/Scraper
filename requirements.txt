@@ -1,0 +1,6 @@
+PySide6
+python-dotenv
+pydantic
+ddgs
+scrapegraphai
+playwright
